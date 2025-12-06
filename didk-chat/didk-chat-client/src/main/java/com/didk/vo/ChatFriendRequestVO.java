@@ -1,5 +1,6 @@
 package com.didk.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,40 +18,26 @@ import java.util.Date;
 public class ChatFriendRequestVO implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /**
-     * id
-     */
+    @Schema(description = "id")
     private Long id;
 
-    /**
-     * 发送请求用户id
-     */
+    @Schema(description = "发送请求用户id")
     private Long fromUserId;
 
-    /**
-     * 接收请求用户id
-     */
+    @Schema(description = "接收请求用户id")
     private Long toUserId;
 
-    /**
-     * 状态：0待处理 1已同意 2已拒绝
-     */
+    @Schema(description = "状态：0待处理 1已同意 2已拒绝")
     private Integer status;
 
-    /**
-     * 验证消息
-     */
+    @Schema(description = "验证消息")
     private String verifyMessage;
 
-    /**
-     * 发送时间
-     */
+    @Schema(description = "发送时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createDate;
 
-    /**
-     * 处理时间
-     */
+    @Schema(description = "处理时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date processDate;
 }

@@ -1,5 +1,6 @@
 package com.didk.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,43 +17,27 @@ import java.util.List;
 public class ChatMessageDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /**
-     * id
-     */
+    @Schema(description = "id")
     private Long id;
 
-    /**
-     * 发送者id
-     */
+    @Schema(description = "发送者id")
     private Long sendId;
 
-    /**
-     * 接收者类型（0用户 1群聊）
-     */
+    @Schema(description = "接收者类型（0用户 1群聊）")
     private Integer receiverType;
 
-    /**
-     * 接收者id
-     */
+    @Schema(description = "接收者id")
     private Long receiverId;
 
-    /**
-     * 消息类型：0-文本 1-图片 2-文件 3-系统消息 4-公告
-     */
+    @Schema(description = "消息类型：0-文本 1-图片 2-文件 3-系统消息 4-公告")
     private Integer messageType;
 
-    /**
-     * 内容（文本或url地址）
-     */
+    @Schema(description = "内容（文本或url地址）")
     private String content;
 
-    /**
-     * 公告id（如果是公告信息，为null代表对应公告已修改或删除）
-     */
+    @Schema(description = "公告id（如果是公告信息，为null代表对应公告已修改或删除）")
     private Long announceId;
 
-    /**
-     * 消息附件（图片或文件）
-     */
+    @Schema(description = "消息附件（图片或文件）")
     private List<MultipartFile> attachments;
 }

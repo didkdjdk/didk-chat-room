@@ -1,5 +1,6 @@
 package com.didk.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,50 +18,32 @@ import java.util.Date;
 public class ChatAnnounceVO implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /**
-     * id
-     */
+    @Schema(description = "id")
     private Long id;
 
-    /**
-     * 群聊id
-     */
+    @Schema(description = "群聊id")
     private Long roomId;
 
-    /**
-     * 发布公告用户id
-     */
+    @Schema(description = "发布公告用户id")
     private Long userId;
 
-    /**
-     * 公告标题
-     */
+    @Schema(description = "公告标题")
     private String title;
 
-    /**
-     * 公告内容
-     */
+    @Schema(description = "公告内容")
     private String content;
 
-    /**
-     * 公告图片地址（最多一张）
-     */
+    @Schema(description = "公告图片地址（最多一张）")
     private String imageUrl;
 
-    /**
-     * 是否置顶（0否1是）
-     */
+    @Schema(description = "是否置顶（0否1是）")
     private Integer isPinned;
 
-    /**
-     * 创建时间
-     */
+    @Schema(description = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createDate;
 
-    /**
-     * 更新时间
-     */
+    @Schema(description = "更新时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date updateDate;
 }

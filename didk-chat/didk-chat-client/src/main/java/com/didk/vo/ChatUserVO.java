@@ -1,5 +1,6 @@
 package com.didk.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,44 +16,28 @@ import java.io.Serializable;
 public class ChatUserVO implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /**
-     * id
-     */
+    @Schema(description = "id")
     private Long id;
 
-    /**
-     * 用户名
-     */
+    @Schema(description = "用户名")
     private String username;
 
-    /**
-     * 头像
-     */
+    @Schema(description = "头像")
     private String headImage;
 
-    /**
-     * 性别
-     */
+    @Schema(description = "性别")
     private int gender;
 
-    /**
-     * 邮箱
-     */
+    @Schema(description = "邮箱")
     private String email;
 
-    /**
-     * 手机号
-     */
+    @Schema(description = "手机号")
     private String mobile;
 
-    /**
-     * 个性签名
-     */
+    @Schema(description = "个性签名")
     private String signature;
 
-    /**
-     * 好友备注名
-     */
+    @Schema(description = "好友备注名")
     private String alias;
 
 }
