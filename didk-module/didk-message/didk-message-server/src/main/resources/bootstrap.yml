@@ -1,0 +1,41 @@
+server:
+  port: 8085
+  servlet:
+    context-path: /message
+
+spring:
+  application:
+    name: didk-message-server
+  #环境 dev|test|prod
+  profiles:
+    active: dev
+  messages:
+    encoding: UTF-8
+    basename: i18n/messages,i18n/messages_common
+  cloud:
+    nacos:
+      discovery:
+        metadata:
+          management:
+            context-path: ${server.servlet.context-path}/actuator
+        server-addr: ${nacos_host:localhost}:${nacos_port:8848}
+        #nacos的命名空间ID，默认是public
+        namespace: e5805c00-5a4a-4d9b-a91d-84ffd52a8e20
+        service: didk-message-server
+        username: ${nacos_username:nacos}
+        password: ${nacos_password:nacos}
+      config:
+        username: ${spring.cloud.nacos.discovery.username}
+        password: ${spring.cloud.nacos.discovery.password}
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        namespace: ${spring.cloud.nacos.discovery.namespace}
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        #指定共享配置，且支持动态刷新
+        extension-configs:
+          - data-id: datasource.yaml
+            group: ${spring.cloud.nacos.config.group}
+            refresh: true
+          - data-id: common.yaml
+            group: ${spring.cloud.nacos.config.group}
+            refresh: true

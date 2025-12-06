@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.didk.dao.ChatUserRoomDao">
+
+    <resultMap type="com.didk.entity.ChatUserRoomEntity" id="userRoomMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="roomId" column="room_id"/>
+        <result property="role" column="role"/>
+        <result property="isPinned" column="is_pinned"/>
+        <result property="alias" column="alias"/>
+        <result property="isExit" column="is_exit"/>
+        <result property="readSeq" column="read_seq"/>
+        <result property="lastMsgContent" column="last_msg_content"/>
+        <result property="lastMsgTime" column="last_msg_time"/>
+        <result property="lastMsgType" column="last_msg_type"/>
+        <result property="createDate" column="create_date"/>
+    </resultMap>
+
+    <select id="selectAll" resultType="com.didk.entity.ChatUserRoomEntity">
+        select * from chat_user_room
+        <where>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+            <if test="roomId != null">
+                and room_id = #{roomId}
+            </if>
+            <if test="role != null">
+                and role = #{role}
+            </if>
+            <if test="isExit != null">
+                and is_exit = #{isExit}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectByUserId" resultType="com.didk.entity.ChatUserRoomEntity" parameterType="long">
+        select * from chat_user_room where user_id = #{userId} and is_exit = 0
+    </select>
+
+    <select id="selectByRoomId" resultType="com.didk.entity.ChatUserRoomEntity" parameterType="long">
+        select * from chat_user_room where room_id = #{roomId} and is_exit = 0
+    </select>
+
+    <select id="selectByUserAndRoom" resultType="com.didk.entity.ChatUserRoomEntity">
+        select * from chat_user_room where user_id = #{userId} and room_id = #{roomId}
+    </select>
+
+    <select id="selectAdminsByRoomId" resultType="com.didk.entity.ChatUserRoomEntity" parameterType="long">
+        select * from chat_user_room where room_id = #{roomId} and (role = 0 or role = 1) and is_exit = 0
+    </select>
+
+    <update id="updateExitStatus">
+        update chat_user_room set is_exit = #{isExit} where user_id = #{userId} and room_id = #{roomId}
+    </update>
+
+</mapper>

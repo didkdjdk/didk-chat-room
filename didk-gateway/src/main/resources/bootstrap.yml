@@ -1,0 +1,72 @@
+server:
+  port: 8081
+spring:
+  profiles:
+    active: dev
+  application:
+    name: didk-gateway-server
+  #环境 dev|test|prod
+  messages:
+    encoding: UTF-8
+    basename: i18n/messages_common
+  main:
+    allow-bean-definition-overriding: true
+  cloud:
+    gateway:
+      metrics:
+        enabled: true
+      discovery:
+        locator:
+          enabled: true
+    nacos:
+      discovery:
+        metadata:
+          management:
+            context-path: /actuator
+        server-addr: ${nacos_host:localhost}:${nacos_port:8848}
+        #nacos的命名空间ID，默认是public
+        namespace: e5805c00-5a4a-4d9b-a91d-84ffd52a8e20
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        namespace: ${spring.cloud.nacos.discovery.namespace}
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        #指定共享配置，且支持动态刷新
+        extension-configs:
+          - data-id: datasource.yaml
+            group: ${spring.cloud.nacos.config.group}
+            refresh: true
+          - data-id: common.yaml
+            group: ${spring.cloud.nacos.config.group}
+            refresh: true
+knife4j:
+  gateway:
+    enabled: true
+    strategy: manual
+    routes:
+      - name: Admin服务
+        url: /sys/v3/api-docs/default
+        context-path: /sys
+      - name: OSS服务
+        url: /oss/v3/api-docs/default
+        context-path: /oss
+      - name: 消息服务
+        url: /message/v3/api-docs/default
+        context-path: /message
+      - name: 工作流服务
+        url: /flow/v3/api-docs/default
+        context-path: /flow
+      - name: 代码生成器
+        url: /devtools/v3/api-docs/default
+        context-path: /devtools
+      - name: APP流服务
+        url: /api/v3/api-docs/default
+        context-path: /api
+      - name: Auth服务
+        url: /auth/v3/api-docs/default
+        context-path: /auth
+#logging:
+#  level:
+#    org.springframework.cloud.gateway: TRACE  # 核心：看网关路由匹配过程
+#    org.springframework.http.server.reactive: DEBUG # 看请求是否真的进来了
+#    reactor.netty: DEBUG # 看底层网络连接情况

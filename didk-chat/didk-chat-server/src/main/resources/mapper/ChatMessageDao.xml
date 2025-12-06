@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.didk.dao.ChatMessageDao">
+
+    <resultMap type="com.didk.entity.ChatMessageEntity" id="messageMap">
+        <result property="id" column="id"/>
+        <result property="sendId" column="send_id"/>
+        <result property="receiverType" column="receiver_type"/>
+        <result property="receiverId" column="receiver_id"/>
+        <result property="messageType" column="message_type"/>
+        <result property="content" column="content"/>
+        <result property="announceId" column="announce_id"/>
+        <result property="createDate" column="create_date"/>
+    </resultMap>
+
+    <select id="selectAll" resultType="com.didk.entity.ChatMessageEntity">
+        select * from chat_message
+        <where>
+            <if test="sendId != null">
+                and send_id = #{sendId}
+            </if>
+            <if test="receiverId != null">
+                and receiver_id = #{receiverId}
+            </if>
+            <if test="receiverType != null">
+                and receiver_type = #{receiverType}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectBySendId" resultType="com.didk.entity.ChatMessageEntity" parameterType="long">
+        select * from chat_message where send_id = #{sendId}
+    </select>
+
+    <select id="selectByReceiverIdAndType" resultType="com.didk.entity.ChatMessageEntity">
+        select * from chat_message where receiver_id = #{receiverId} and receiver_type = #{receiverType}
+    </select>
+
+    <select id="selectByRoomId" resultType="com.didk.entity.ChatMessageEntity" parameterType="long">
+        select * from chat_message where receiver_type = 1 and receiver_id = #{roomId}
+    </select>
+
+    <select id="selectHistoryMessages" resultType="com.didk.entity.ChatMessageEntity">
+        select * from chat_message 
+        where ((send_id = #{sendId} and receiver_id = #{receiverId}) 
+            or (send_id = #{receiverId} and receiver_id = #{sendId}))
+            and receiver_type = 0
+        order by create_date desc
+        limit #{limit}
+    </select>
+
+</mapper>

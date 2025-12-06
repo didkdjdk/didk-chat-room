@@ -1,0 +1,16 @@
+ignore_urls:
+  - /user/getById
+  - /captcha/get
+  - /captcha/check
+  - /user/save
+  - /user/info
+  - /login
+  - /verify/access-token
+  - /monitor/**
+  - /user/getRealNameList
+  - /user/getUserIdListByRoleIdList
+  - /user/getRoleNameList
+  - /pay/alipay/**
+  - /pay/wechat/**
+  - /params/code/**
+  - /ureport/**

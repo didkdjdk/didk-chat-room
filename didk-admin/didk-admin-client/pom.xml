@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.didk</groupId>
+    <artifactId>didk-admin-client</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>didk-admin-client</name>
+    <description>didk-admin-client</description>
+
+    <parent>
+        <groupId>com.didk</groupId>
+        <artifactId>didk-admin</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.didk</groupId>
+            <artifactId>didk-commons-security</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.didk</groupId>
+            <artifactId>didk-commons-swagger</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.didk</groupId>
+            <artifactId>didk-commons-tools</artifactId>
+        </dependency>
+    </dependencies>
+
+
+
+
+</project>
