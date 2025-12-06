@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dto.ChatFriendDTO;
 import com.didk.entity.ChatFriendEntity;
+import com.didk.vo.ChatConversationListItemVO;
 import com.didk.vo.ChatFriendVO;
 
 import com.didk.commons.tools.page.PageData;
@@ -18,9 +19,9 @@ import java.util.Map;
 public interface ChatFriendService extends IService<ChatFriendEntity> {
 
     /**
-     * 查询所有好友关系
+     * 查询所有好友关系和群聊关系
      */
-    PageData<ChatFriendVO> listAllFriends(Map<String, Object> params);
+    PageData<ChatConversationListItemVO> listAllFriendsAndRooms(Map<String, Object> params);
 
     /**
      * 根据id查询好友关系

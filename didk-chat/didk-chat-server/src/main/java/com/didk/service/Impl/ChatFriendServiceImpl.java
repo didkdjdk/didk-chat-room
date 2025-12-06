@@ -15,6 +15,7 @@ import com.didk.enums.FriendStatusEnum;
 import com.didk.enums.PinnedStatusEnum;
 import com.didk.feign.UserFeignClient;
 import com.didk.service.ChatFriendService;
+import com.didk.vo.ChatConversationListItemVO;
 import com.didk.vo.ChatFriendVO;
 import com.didk.vo.ChatUserVO;
 import jakarta.annotation.Resource;
@@ -35,14 +36,14 @@ public class ChatFriendServiceImpl extends ServiceImpl<ChatFriendDao, ChatFriend
     private UserFeignClient userFeignClient;
 
     /**
-     * 查询所有好友关系
+     * 查询所有好友关系和群聊关系
      */
     @Override
-    public PageData<ChatFriendVO> listAllFriends(Map<String, Object> params) {
+    public PageData<ChatConversationListItemVO> listAllFriendsAndRooms(Map<String, Object> params) {
         PageUtils.paramsToLike(params,"friendName");
-        IPage<ChatFriendEntity> page = PageUtils.getPage(params, "is_pinned", false);
-        List<ChatFriendEntity> list = friendDao.selectAll(params);
-        return PageUtils.getPageData(list, page.getTotal(), ChatFriendVO.class);
+        IPage<ChatConversationListItemVO> page = PageUtils.getPage(params, null, false);
+        List<ChatConversationListItemVO> list = friendDao.selectAllFriendsAndRoomsByUserId(params);
+        return PageUtils.getPageData(list, page.getTotal(), ChatConversationListItemVO.class);
     }
 
     /**

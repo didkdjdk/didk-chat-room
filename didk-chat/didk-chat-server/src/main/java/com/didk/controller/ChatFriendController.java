@@ -3,6 +3,7 @@ package com.didk.controller;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dto.ChatFriendDTO;
 import com.didk.service.ChatFriendService;
+import com.didk.vo.ChatConversationListItemVO;
 import com.didk.vo.ChatFriendVO;
 import com.didk.vo.ChatUserVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.didk.commons.tools.page.PageData;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,9 +30,9 @@ public class ChatFriendController {
     @Resource
     private ChatFriendService chatFriendService;
 
-    // 根据用户ID查询好友列表
-    @GetMapping("listAllFriends")
-    @Operation(summary = "根据用户ID查询好友列表")
+    // 根据用户ID查询好友、群聊列表
+    @GetMapping("listAllFriendsAndRooms")
+    @Operation(summary = "根据用户ID查询好友、群聊列表")
     @Parameters({
         @Parameter(name = "page", description = "当前页码，从1开始", required = true),
         @Parameter(name = "limit", description = "每页显示记录数", required = true),
@@ -41,9 +41,9 @@ public class ChatFriendController {
         @Parameter(name = "userId", description = "用户ID"),
         @Parameter(name = "friendName", description = "好友、群聊名称模糊查询"),
     })
-    public Result<PageData<ChatFriendVO>> list(@RequestParam Map<String, Object> params) {
-        PageData<ChatFriendVO> page = chatFriendService.listAllFriends(params);
-        return new Result<PageData<ChatFriendVO>>().ok(page);
+    public Result<PageData<ChatConversationListItemVO>> listAllFriendsAndRooms(@RequestParam Map<String, Object> params) {
+        PageData<ChatConversationListItemVO> page = chatFriendService.listAllFriendsAndRooms(params);
+        return new Result<PageData<ChatConversationListItemVO>>().ok(page);
     }
 
     // 根据id查询好友关系的相关信息

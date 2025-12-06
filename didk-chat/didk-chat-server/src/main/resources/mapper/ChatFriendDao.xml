@@ -18,7 +18,7 @@
         <result property="createDate" column="create_date"/>
     </resultMap>
 
-    <select id="selectAll" resultType="com.didk.entity.ChatFriendEntity">
+    <select id="selectAllFriendsAndRoomsByUserId" resultType="com.didk.vo.ChatConversationListItemVO">
         SELECT
         *
         FROM
@@ -34,7 +34,7 @@
         f.last_msg_content AS last_msg_content,
         f.last_msg_type AS last_msg_type,
 
-        /* 新增：直接获取持久化的未读数 */
+        /* 直接获取持久化的未读数 */
         f.unread_count AS unread_count
 
         FROM chat_friend f
@@ -50,7 +50,7 @@
         /* Part 2: 群聊列表 */
         SELECT
         r.id AS id,
-        'GROUP' AS chat_type,
+        'ROOM' AS chat_type,
         r.room_name AS name,
         r.head_url AS avatar,
         ur.is_pinned AS is_pinned,

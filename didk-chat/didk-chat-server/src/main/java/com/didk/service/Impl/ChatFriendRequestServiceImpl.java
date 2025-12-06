@@ -75,18 +75,10 @@ public class ChatFriendRequestServiceImpl extends ServiceImpl<ChatFriendRequestD
 
         //添加好友表数据
         if (status == FriendRequestStatusEnum.APPROVED.getCode()){
-            ChatFriendDTO friendDTO1 = new ChatFriendDTO();
-            friendDTO1.setUserId(requestEntity.getFromUserId());
-            friendDTO1.setFriendId(requestEntity.getToUserId());
-            friendDTO1.setStatus(1);
-
-            ChatFriendDTO friendDTO2 = new ChatFriendDTO();
-            friendDTO2.setUserId(requestEntity.getToUserId());
-            friendDTO2.setFriendId(requestEntity.getFromUserId());
-            friendDTO2.setStatus(1);
-
-            friendService.save(friendDTO1);
-            friendService.save(friendDTO2);
+            Long fromUserId = requestEntity.getFromUserId();
+            Long toUserId = requestEntity.getToUserId();
+            friendService.save(fromUserId,toUserId);
+            friendService.save(toUserId,fromUserId);
         }
 
         //通过Websocket向前端发送消息TODO
