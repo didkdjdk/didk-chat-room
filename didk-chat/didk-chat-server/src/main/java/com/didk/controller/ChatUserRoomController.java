@@ -3,7 +3,9 @@ package com.didk.controller;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dto.ChatUserRoomDTO;
 import com.didk.service.ChatUserRoomService;
-import com.didk.vo.ChatUserRoomVO;
+import com.didk.vo.ChatConversationListItemVO;
+import com.didk.vo.ChatRoomMemberVO;
+import com.didk.vo.UserGroupDetailVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -29,53 +31,43 @@ public class ChatUserRoomController {
     @Resource
     private ChatUserRoomService chatUserRoomService;
 
-    // 查询所有用户-群聊关系
-    @GetMapping("listAllUserRooms")
-    @Operation(summary = "分页查询用户群聊关系")
+    // 根据用户id查询加入的群聊
+    @GetMapping("listByUserId")
+    @Operation(summary = "根据用户id查询加入的群聊")
     @Parameters({
-        @Parameter(name = "page", description = "当前页码，从1开始", required = true),
-        @Parameter(name = "limit", description = "每页显示记录数", required = true),
-        @Parameter(name = "orderField", description = "排序字段"),
-        @Parameter(name = "order", description = "排序方式，可选值(asc、desc)"),
-        @Parameter(name = "userId", description = "用户ID"),
-        @Parameter(name = "roomId", description = "群聊ID"),
-        @Parameter(name = "role", description = "角色（0群主1管理员2成员）"),
-        @Parameter(name = "isExit", description = "是否退出（踢出）群聊0否1是")
+            @Parameter(name = "page", description = "当前页码，从1开始", required = true),
+            @Parameter(name = "limit", description = "每页显示记录数", required = true),
+            @Parameter(name = "orderField", description = "排序字段"),
+            @Parameter(name = "order", description = "排序方式，可选值(asc、desc)"),
+            @Parameter(name = "userId", description = "用户ID"),
+            @Parameter(name = "roomName", description = "群聊名称模糊查询"),
     })
-    public Result<PageData<ChatUserRoomVO>> list(@RequestParam Map<String, Object> params) {
-        PageData<ChatUserRoomVO> page = chatUserRoomService.listAllUserRooms(params);
-        return new Result<PageData<ChatUserRoomVO>>().ok(page);
+    public Result<PageData<ChatConversationListItemVO>> listByUserId(@RequestParam Map<String, Object> params) {
+        PageData<ChatConversationListItemVO> data = chatUserRoomService.listByUserId(params);
+        return new Result<PageData<ChatConversationListItemVO>>().ok(data);
     }
 
-    // 根据用户id查询加入的群聊
-    @GetMapping("listByUserId/{userId}")
-    @Operation(summary = "根据用户ID查询加入的群聊")
-    public Result<List<ChatUserRoomVO>> listByUserId(@PathVariable Long userId) {
-        List<ChatUserRoomVO> data = chatUserRoomService.listByUserId(userId);
-        return new Result<List<ChatUserRoomVO>>().ok(data);
+    // 用户查看自己的某个的群聊的信息
+    @GetMapping("user/{roomId}")
+    @Operation(summary = "用户查看自己的某个的群聊的信息")
+    public Result<UserGroupDetailVO> userSelectRoom(@PathVariable("roomId") Long roomId) {
+        UserGroupDetailVO data = chatUserRoomService.userSelectRoom(roomId);
+        return new Result<UserGroupDetailVO>().ok(data);
     }
 
     // 根据群聊id查询群成员
     @GetMapping("listByRoomId/{roomId}")
     @Operation(summary = "根据群聊ID查询群成员")
-    public Result<List<ChatUserRoomVO>> listByRoomId(@PathVariable Long roomId) {
-        List<ChatUserRoomVO> data = chatUserRoomService.listByRoomId(roomId);
-        return new Result<List<ChatUserRoomVO>>().ok(data);
-    }
-
-    // 根据id查询用户-群聊关系
-    @GetMapping("{userRoomId}")
-    @Operation(summary = "根据ID获取用户群聊关系信息")
-    public Result<ChatUserRoomVO> get(@PathVariable("userRoomId") Long userRoomId) {
-        ChatUserRoomVO data = chatUserRoomService.get(userRoomId);
-        return new Result<ChatUserRoomVO>().ok(data);
+    public Result<List<ChatRoomMemberVO>> listByRoomId(@PathVariable Long roomId) {
+        List<ChatRoomMemberVO> data = chatUserRoomService.listByRoomId(roomId);
+        return new Result<List<ChatRoomMemberVO>>().ok(data);
     }
 
     // 用户加入群聊
     @PostMapping
     @Operation(summary = "用户加入群聊")
-    public Result<?> save(@RequestBody ChatUserRoomDTO dto) {
-        return chatUserRoomService.save(dto);
+    public Result<?> save(Long userId, Long roomId) {
+        return chatUserRoomService.save(userId,roomId,0);
     }
 
     // 修改用户在群聊中的信息（如群昵称、置顶等）
@@ -85,19 +77,20 @@ public class ChatUserRoomController {
         return chatUserRoomService.update(dto);
     }
 
-    // 用户退出群聊（或被踢出）
-    @DeleteMapping("{userRoomId}")
+    // 用户退出群聊
+    @DeleteMapping("{roomId}")
     @Operation(summary = "用户退出群聊")
-    public Result<?> delete(@PathVariable Long userRoomId) {
-        chatUserRoomService.delete(userRoomId);
+    public Result<?> delete(@PathVariable Long roomId) {
+        chatUserRoomService.delete(roomId);
         return new Result<>();
     }
 
-    // 批量删除用户-群聊关系
-    @DeleteMapping("deleteBatch")
-    @Operation(summary = "批量删除用户群聊关系")
-    public Result<?> deleteBatch(@RequestBody Long[] ids) {
-        chatUserRoomService.deleteBatch(ids);
+    // 将一批用户踢出群聊
+    @DeleteMapping("kickOut")
+    @Operation(summary = "将一批用户踢出群聊")
+    public Result<?> kickOut(Long roomId,List<Long> userIds) {
+        chatUserRoomService.updateExitStatusBatch(roomId,userIds);
         return new Result<>();
     }
+
 }

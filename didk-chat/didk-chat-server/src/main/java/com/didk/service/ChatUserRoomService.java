@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dto.ChatUserRoomDTO;
 import com.didk.entity.ChatUserRoomEntity;
-import com.didk.vo.ChatUserRoomVO;
+import com.didk.vo.ChatConversationListItemVO;
+import com.didk.vo.ChatRoomMemberVO;
 
 import com.didk.commons.tools.page.PageData;
+import com.didk.vo.UserGroupDetailVO;
+
 import java.util.List;
 import java.util.Map;
 
@@ -16,29 +19,24 @@ import java.util.Map;
 public interface ChatUserRoomService extends IService<ChatUserRoomEntity> {
 
     /**
-     * 查询所有用户-群聊关系
+     * 根据用户id查询群聊
      */
-    PageData<ChatUserRoomVO> listAllUserRooms(Map<String, Object> params);
+    PageData<ChatConversationListItemVO> listByUserId(Map<String, Object> params);
 
     /**
-     * 根据用户id查询加入的群聊
+     * 用户查看自己的某个的群聊的信息
      */
-    List<ChatUserRoomVO> listByUserId(Long userId);
+    UserGroupDetailVO userSelectRoom(Long roomId);
 
     /**
      * 根据群聊id查询群成员
      */
-    List<ChatUserRoomVO> listByRoomId(Long roomId);
-
-    /**
-     * 根据id查询用户-群聊关系
-     */
-    ChatUserRoomVO get(Long id);
+    List<ChatRoomMemberVO> listByRoomId(Long roomId);
 
     /**
      * 用户加入群聊
      */
-    Result<?> save(ChatUserRoomDTO dto);
+    Result<?> save(Long userId, Long roomId, Integer role);
 
     /**
      * 修改用户在群聊中的信息（如群昵称、置顶等）
@@ -46,12 +44,13 @@ public interface ChatUserRoomService extends IService<ChatUserRoomEntity> {
     Result<?> update(ChatUserRoomDTO dto);
 
     /**
-     * 用户退出群聊（或被踢出）
+     * 用户退出群聊
      */
-    void delete(Long id);
+    void delete(Long roomId);
 
     /**
-     * 批量删除用户-群聊关系
+     * 从群聊中批量踢出一批用户
      */
-    void deleteBatch(Long[] ids);
+    void updateExitStatusBatch(Long roomId, List<Long> userIds);
+
 }

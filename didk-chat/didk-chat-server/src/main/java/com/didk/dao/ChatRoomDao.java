@@ -5,7 +5,6 @@ import com.didk.entity.ChatRoomEntity;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 群聊DAO
@@ -13,9 +12,13 @@ import java.util.Map;
 @Mapper
 public interface ChatRoomDao extends BaseDao<ChatRoomEntity> {
 
-    List<ChatRoomEntity> selectAll(Map<String, Object> params);
-
     List<ChatRoomEntity> selectByName(String roomName);
 
     List<ChatRoomEntity> selectByOwnerId(Long ownerId);
+
+    void incrementMember(Long roomId);
+
+    void reduceMember(Long roomId);
+
+    void incrementSeq(Long roomId);
 }

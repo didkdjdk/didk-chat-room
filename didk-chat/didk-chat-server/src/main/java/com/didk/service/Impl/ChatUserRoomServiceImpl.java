@@ -2,15 +2,21 @@ package com.didk.service.Impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.didk.commons.security.user.SecurityUser;
 import com.didk.commons.tools.page.PageData;
-import com.didk.commons.tools.utils.ConvertUtils;
 import com.didk.commons.tools.utils.PageUtils;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dao.ChatUserRoomDao;
 import com.didk.dto.ChatUserRoomDTO;
 import com.didk.entity.ChatUserRoomEntity;
+import com.didk.enums.PinnedStatusEnum;
+import com.didk.enums.UserRoomExitStatusEnum;
+import com.didk.enums.UserRoomRoleEnum;
+import com.didk.service.ChatRoomService;
 import com.didk.service.ChatUserRoomService;
-import com.didk.vo.ChatUserRoomVO;
+import com.didk.vo.ChatConversationListItemVO;
+import com.didk.vo.ChatRoomMemberVO;
+import com.didk.vo.UserGroupDetailVO;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
@@ -25,58 +31,67 @@ public class ChatUserRoomServiceImpl extends ServiceImpl<ChatUserRoomDao, ChatUs
 
     @Resource
     private ChatUserRoomDao userRoomDao;
+    @Resource
+    private ChatRoomService roomService;
 
     /**
-     * 查询所有用户-群聊关系
+     * 根据群主id查询群聊
      */
     @Override
-    public PageData<ChatUserRoomVO> listAllUserRooms(Map<String, Object> params) {
-        IPage<ChatUserRoomEntity> page = PageUtils.getPage(params, null, false);
-        List<ChatUserRoomEntity> list = userRoomDao.selectAll(params);
-        return PageUtils.getPageData(list, page.getTotal(), ChatUserRoomVO.class);
+    public PageData<ChatConversationListItemVO> listByUserId(Map<String, Object> params) {
+        PageUtils.paramsToLike(params,"roomName");
+        IPage<ChatConversationListItemVO> page = PageUtils.getPage(params, null, false);
+        List<ChatConversationListItemVO> list = userRoomDao.selectByUserId(params);
+        return PageUtils.getPageData(list, page.getTotal(), ChatConversationListItemVO.class);
     }
 
     /**
-     * 根据用户id查询加入的群聊
+     * 用户查看自己的某个的群聊的信息
      */
     @Override
-    public List<ChatUserRoomVO> listByUserId(Long userId) {
-        List<ChatUserRoomEntity> userRoomEntities = userRoomDao.selectByUserId(userId);
-        return ConvertUtils.sourceToTarget(userRoomEntities, ChatUserRoomVO.class);
+    public UserGroupDetailVO userSelectRoom(Long roomId) {
+        Long userId = SecurityUser.getUserId();
+        return userRoomDao.getGroupChatDetail(userId,roomId);
     }
 
     /**
      * 根据群聊id查询群成员
      */
     @Override
-    public List<ChatUserRoomVO> listByRoomId(Long roomId) {
-        List<ChatUserRoomEntity> userRoomEntities = userRoomDao.selectByRoomId(roomId);
-        return ConvertUtils.sourceToTarget(userRoomEntities, ChatUserRoomVO.class);
-    }
-
-    /**
-     * 根据id查询用户-群聊关系
-     */
-    @Override
-    public ChatUserRoomVO get(Long id) {
-        ChatUserRoomEntity userRoomEntity = userRoomDao.selectById(id);
-        return ConvertUtils.sourceToTarget(userRoomEntity, ChatUserRoomVO.class);
+    public List<ChatRoomMemberVO> listByRoomId(Long roomId) {
+        return userRoomDao.selectByRoomId(roomId);
     }
 
     /**
      * 用户加入群聊
      */
-    @Override
-    public Result<?> save(ChatUserRoomDTO dto) {
-        ChatUserRoomEntity userRoomEntity = new ChatUserRoomEntity();
-        userRoomEntity.setUserId(dto.getUserId());
-        userRoomEntity.setRoomId(dto.getRoomId());
-        userRoomEntity.setRole(dto.getRole());
-        userRoomEntity.setIsPinned(dto.getIsPinned());
-        userRoomEntity.setAlias(dto.getAlias());
-        userRoomEntity.setIsExit(dto.getIsExit());
+    public Result<?> save(Long userId, Long roomId, Integer role) {
+        ChatUserRoomEntity chatUserRoomEntity = userRoomDao.selectByUserAndRoom(userId, roomId);
+        if (chatUserRoomEntity == null) {
+            ChatUserRoomEntity userRoomEntity = new ChatUserRoomEntity();
+            userRoomEntity.setUserId(userId);
+            userRoomEntity.setRoomId(roomId);
+            userRoomEntity.setRole(role);
+            userRoomEntity.setIsPinned(PinnedStatusEnum.NOT_PINNED.getCode());
+            userRoomEntity.setIsExit(UserRoomExitStatusEnum.NOT_EXITED.getCode());
 
-        userRoomDao.insert(userRoomEntity);
+            userRoomDao.insert(userRoomEntity);
+        }else {
+            if (chatUserRoomEntity.getIsExit() == UserRoomExitStatusEnum.NOT_EXITED.getCode()){
+                return new Result<>().error("您已加入该群聊");
+            }else {
+                //用户曾经被踢出群聊且没有删除群聊
+                chatUserRoomEntity.setIsExit(UserRoomExitStatusEnum.NOT_EXITED.getCode());
+                chatUserRoomEntity.setRole(UserRoomRoleEnum.MEMBER.getCode());
+                userRoomDao.updateById(chatUserRoomEntity);
+            }
+        }
+        //群聊成员数+1
+        roomService.incrementMember(roomId);
+
+        //通过Websocket给前端用户发送信息：加入群聊提醒TODO
+
+
         return new Result<>().ok(null);
     }
 
@@ -95,20 +110,21 @@ public class ChatUserRoomServiceImpl extends ServiceImpl<ChatUserRoomDao, ChatUs
     }
 
     /**
-     * 用户退出群聊（或被踢出）
+     * 用户退出群聊
      */
     @Override
-    public void delete(Long id) {
-        userRoomDao.deleteById(id);
+    public void delete(Long roomId) {
+        Long userId = SecurityUser.getUserId();
+        userRoomDao.deleteByUserIdAndRoomId(userId,roomId);
+        roomService.reduceMember(roomId);
     }
 
     /**
-     * 批量删除用户-群聊关系
+     * 从群聊中批量踢出一批用户
      */
     @Override
-    public void deleteBatch(Long[] ids) {
-        for (Long id : ids) {
-            userRoomDao.deleteById(id);
-        }
+    public void updateExitStatusBatch(Long roomId, List<Long> userIds) {
+        userRoomDao.updateExitStatusBatch(roomId,userIds);
     }
+
 }

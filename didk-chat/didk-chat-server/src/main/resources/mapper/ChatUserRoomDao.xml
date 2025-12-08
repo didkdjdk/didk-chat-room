@@ -18,6 +18,61 @@
         <result property="createDate" column="create_date"/>
     </resultMap>
 
+    <select id="selectByUserId" resultType="com.didk.vo.ChatConversationListItemVO" parameterType="java.lang.Long">
+        SELECT
+        r.id AS id,
+        -- 如果用户设置了群昵称（alias），优先显示群昵称，否则显示群名称
+        COALESCE(ur.alias, r.room_name) AS name,
+        r.head_url AS avatar,
+        ur.is_pinned AS is_pinned,
+        ur.last_msg_time AS last_msg_time,
+        ur.last_msg_content AS last_msg_content,
+        ur.last_msg_type AS last_msg_type,
+        /* 逻辑：(群总消息序号 - 用户已读序号)，如果结果小于0则为0 (使用COALESCE处理NULL值) */
+        (IF((COALESCE(r.total_seq, 0) - COALESCE(ur.read_seq, 0)) > 0, (r.total_seq - ur.read_seq), 0)) AS unread_count
+        FROM chat_user_room ur
+        JOIN chat_room r ON ur.room_id = r.id
+        WHERE ur.user_id = #{userId}
+        <if test="friendName != null and friendName.trim()!=''">
+            AND (r.room_name LIKE #{roomName})
+            OR ur.alias LIKE #{roomName})
+        </if>
+        -- 排序：置顶优先，然后按最后一条消息时间倒序
+        ORDER BY ur.is_pinned DESC, ur.last_msg_time DESC
+    </select>
+
+    <select id="getGroupChatDetail" resultType="com.didk.vo.UserGroupDetailVO">
+        SELECT
+            r.id AS groupId,
+            r.room_name AS roomName,
+            r.head_url AS headUrl,
+            r.current_members AS currentMembers,
+            r.create_date AS createDate,
+            r.description AS description,
+            r.owner_id AS ownerId,
+
+            -- 用户专属信息 (来自 chat_user_room)
+            ur.alias AS alias,
+            ur.role AS userRole,
+            ur.is_pinned AS isPinned,
+
+            -- 查询最新公告的文本内容
+            (
+                SELECT a.content
+                FROM chat_announce a
+                WHERE a.room_id = r.id
+                ORDER BY a.create_date DESC
+                LIMIT 1
+            ) AS latestAnnounceContent
+
+        FROM chat_user_room ur
+                 JOIN chat_room r ON ur.room_id = r.id
+        WHERE ur.user_id = #{userId}
+          AND ur.room_id = #{roomId}
+          -- 确保用户在该群聊中是活跃状态（未退出/未被踢出）
+          AND ur.is_exit = 0
+    </select>
+
     <select id="selectAll" resultType="com.didk.entity.ChatUserRoomEntity">
         select * from chat_user_room
         <where>
@@ -36,12 +91,13 @@
         </where>
     </select>
 
-    <select id="selectByUserId" resultType="com.didk.entity.ChatUserRoomEntity" parameterType="long">
-        select * from chat_user_room where user_id = #{userId} and is_exit = 0
-    </select>
-
-    <select id="selectByRoomId" resultType="com.didk.entity.ChatUserRoomEntity" parameterType="long">
-        select * from chat_user_room where room_id = #{roomId} and is_exit = 0
+    <select id="selectByRoomId" resultType="com.didk.vo.ChatRoomMemberVO" parameterType="long">
+        select chat_user_room.id,user_id,role,username,head_image from chat_user_room
+            join sys_user on chat_user_room.user_id = sys_user.id
+        where room_id = #{roomId} and is_exit = 0
+        ORDER BY
+            chat_user_room.role,        -- 群主和管理员排前面
+            chat_user_room.create_date  -- 其次按入群时间排序
     </select>
 
     <select id="selectByUserAndRoom" resultType="com.didk.entity.ChatUserRoomEntity">
@@ -55,5 +111,19 @@
     <update id="updateExitStatus">
         update chat_user_room set is_exit = #{isExit} where user_id = #{userId} and room_id = #{roomId}
     </update>
+
+    <update id="updateExitStatusBatch" parameterType="java.lang.Long">
+        UPDATE chat_user_room
+        SET is_exit = 1
+        WHERE room_id = #{roomId}
+        AND user_id IN
+        <foreach item="item" index="index" collection="userIds" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <delete id="deleteByUserIdAndRoomId">
+        delete from chat_user_room where user_id = #{userId} and room_id = #{roomId}
+    </delete>
 
 </mapper>

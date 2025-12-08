@@ -12,20 +12,7 @@
         <result property="createDate" column="create_date"/>
         <result property="description" column="description"/>
         <result property="ownerId" column="owner_id"/>
-        <result property="status" column="status"/>
     </resultMap>
-
-    <select id="selectAll" resultType="com.didk.entity.ChatRoomEntity">
-        select * from chat_room
-        <where>
-            <if test="roomName != null and roomName.trim() != ''">
-                room_name like concat('%', #{roomName}, '%')
-            </if>
-            <if test="status != null">
-                and status = #{status}
-            </if>
-        </where>
-    </select>
 
     <select id="selectByName" resultType="com.didk.entity.ChatRoomEntity" parameterType="string">
         select * from chat_room where room_name = #{roomName}
@@ -34,5 +21,23 @@
     <select id="selectByOwnerId" resultType="com.didk.entity.ChatRoomEntity" parameterType="long">
         select * from chat_room where owner_id = #{ownerId}
     </select>
+
+    <update id="incrementMember" parameterType="java.lang.Long">
+        UPDATE chat_room
+        SET current_members = current_members + 1
+        WHERE id = #{roomId};
+    </update>
+
+    <update id="reduceMember" parameterType="java.lang.Long">
+        UPDATE chat_room
+        SET current_members = current_members - 1
+        WHERE id = #{roomId};
+    </update>
+
+    <update id="incrementSeq" parameterType="java.lang.Long">
+        UPDATE chat_room
+        SET total_seq = total_seq + 1
+        WHERE id = #{roomId};
+    </update>
 
 </mapper>

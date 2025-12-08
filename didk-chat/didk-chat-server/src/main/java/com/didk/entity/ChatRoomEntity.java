@@ -56,7 +56,13 @@ public class ChatRoomEntity implements Serializable {
     private Long ownerId;
 
     /**
-     * 状态（0正常1删除）
+     * 加群模式：0-无需审批（自由加入），1-需要审批（无需问题），2-需要回答问题并审批
      */
-    private Integer status;
+    private Integer joinMode;
+
+    /**
+     * 入群问题（当join_mode=2时有效）
+     */
+    private String joinQuestion;
+
 }
