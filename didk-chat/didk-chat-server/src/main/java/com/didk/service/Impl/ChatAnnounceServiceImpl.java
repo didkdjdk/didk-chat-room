@@ -2,18 +2,27 @@ package com.didk.service.Impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.didk.commons.security.user.SecurityUser;
 import com.didk.commons.tools.page.PageData;
 import com.didk.commons.tools.utils.ConvertUtils;
 import com.didk.commons.tools.utils.PageUtils;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dao.ChatAnnounceDao;
 import com.didk.dto.ChatAnnounceDTO;
+import com.didk.dto.ChatMessageDTO;
 import com.didk.entity.ChatAnnounceEntity;
+import com.didk.enums.MessageTypeEnum;
+import com.didk.enums.ReceiverTypeEnum;
 import com.didk.service.ChatAnnounceService;
+import com.didk.service.ChatMessageService;
+import com.didk.vo.ChatAnnounceListItemVO;
 import com.didk.vo.ChatAnnounceVO;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -21,37 +30,32 @@ import java.util.Map;
  * 公告实现类
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class ChatAnnounceServiceImpl extends ServiceImpl<ChatAnnounceDao, ChatAnnounceEntity> implements ChatAnnounceService {
 
     @Resource
     private ChatAnnounceDao announceDao;
+    @Resource
+    private ChatMessageService messageService;
 
     /**
      * 分页查询公告
      */
     @Override
-    public PageData<ChatAnnounceVO> listAllAnnounces(Map<String, Object> params) {
+    public PageData<ChatAnnounceListItemVO> listByRoomId(Map<String, Object> params) {
         IPage<ChatAnnounceEntity> page = PageUtils.getPage(params, null, false);
-        List<ChatAnnounceEntity> list = announceDao.selectAll(params);
-        return PageUtils.getPageData(list, page.getTotal(), ChatAnnounceVO.class);
-    }
-
-    /**
-     * 根据群聊id查询公告
-     */
-    @Override
-    public List<ChatAnnounceVO> listByRoomId(Long roomId) {
-        List<ChatAnnounceEntity> announceEntities = announceDao.selectByRoomId(roomId);
-        return ConvertUtils.sourceToTarget(announceEntities, ChatAnnounceVO.class);
+        List<ChatAnnounceEntity> list = announceDao.selectByRoomId(params);
+        return PageUtils.getPageData(list, page.getTotal(), ChatAnnounceListItemVO.class);
     }
 
     /**
      * 根据用户id查询发布的公告
      */
     @Override
-    public List<ChatAnnounceVO> listByUserId(Long userId) {
-        List<ChatAnnounceEntity> announceEntities = announceDao.selectByUserId(userId);
-        return ConvertUtils.sourceToTarget(announceEntities, ChatAnnounceVO.class);
+    public PageData<ChatAnnounceListItemVO> listByUserId(Map<String, Object> params) {
+        IPage<ChatAnnounceEntity> page = PageUtils.getPage(params, null, false);
+        List<ChatAnnounceEntity> announceEntities = announceDao.selectByUserIdAndRoomId(params);
+        return PageUtils.getPageData(announceEntities, page.getTotal(), ChatAnnounceListItemVO.class);
     }
 
     /**
@@ -59,7 +63,7 @@ public class ChatAnnounceServiceImpl extends ServiceImpl<ChatAnnounceDao, ChatAn
      */
     @Override
     public ChatAnnounceVO get(Long id) {
-        ChatAnnounceEntity announceEntity = announceDao.selectById(id);
+        ChatAnnounceEntity announceEntity = announceDao.getById(id);
         return ConvertUtils.sourceToTarget(announceEntity, ChatAnnounceVO.class);
     }
 
@@ -68,14 +72,22 @@ public class ChatAnnounceServiceImpl extends ServiceImpl<ChatAnnounceDao, ChatAn
      */
     @Override
     public Result<?> save(ChatAnnounceDTO dto) {
-        ChatAnnounceEntity announceEntity = new ChatAnnounceEntity();
-        announceEntity.setRoomId(dto.getRoomId());
-        announceEntity.setUserId(dto.getUserId());
-        announceEntity.setTitle(dto.getTitle());
-        announceEntity.setContent(dto.getContent());
-        announceEntity.setIsPinned(dto.getIsPinned());
-
+        Long userId = SecurityUser.getUserId();
+        //添加公告
+        ChatAnnounceEntity announceEntity = ConvertUtils.sourceToTarget(dto, ChatAnnounceEntity.class);
+        announceEntity.setUserId(userId);
         announceDao.insert(announceEntity);
+
+        //发送公告消息
+        ChatMessageDTO chatMessageDTO = new ChatMessageDTO();
+        chatMessageDTO.setSendId(userId);
+        chatMessageDTO.setReceiverType(ReceiverTypeEnum.ROOM.getCode());
+        chatMessageDTO.setReceiverId(announceEntity.getRoomId());
+        chatMessageDTO.setMessageType(MessageTypeEnum.ANNOUNCEMENT.getCode());
+        chatMessageDTO.setContent(announceEntity.getContent());
+        chatMessageDTO.setAnnounceId(announceEntity.getId());
+        messageService.save(chatMessageDTO);
+
         return new Result<>().ok(null);
     }
 
@@ -84,13 +96,26 @@ public class ChatAnnounceServiceImpl extends ServiceImpl<ChatAnnounceDao, ChatAn
      */
     @Override
     public Result<?> update(ChatAnnounceDTO dto) {
-        ChatAnnounceEntity announceEntity = new ChatAnnounceEntity();
-        announceEntity.setId(dto.getId());
-        announceEntity.setTitle(dto.getTitle());
-        announceEntity.setContent(dto.getContent());
-        announceEntity.setIsPinned(dto.getIsPinned());
-
+        Long userId = SecurityUser.getUserId();
+        //修改公告信息（需要刷新创建时间）
+        ChatAnnounceEntity announceEntity = ConvertUtils.sourceToTarget(dto, ChatAnnounceEntity.class);
+        announceEntity.setUserId(userId);
+        announceEntity.setCreateDate(new Date());
         announceDao.updateById(announceEntity);
+
+        //将之前的公告消息的公告id设置为null
+        messageService.deleteByAnnounceId(announceEntity.getId());
+
+        //添加新的公告消息
+        ChatMessageDTO chatMessageDTO = new ChatMessageDTO();
+        chatMessageDTO.setSendId(userId);
+        chatMessageDTO.setReceiverType(ReceiverTypeEnum.ROOM.getCode());
+        chatMessageDTO.setReceiverId(announceEntity.getRoomId());
+        chatMessageDTO.setMessageType(MessageTypeEnum.ANNOUNCEMENT.getCode());
+        chatMessageDTO.setContent(announceEntity.getContent());
+        chatMessageDTO.setAnnounceId(announceEntity.getId());
+        messageService.save(chatMessageDTO);
+
         return new Result<>().ok(null);
     }
 
@@ -100,6 +125,8 @@ public class ChatAnnounceServiceImpl extends ServiceImpl<ChatAnnounceDao, ChatAn
     @Override
     public void delete(Long id) {
         announceDao.deleteById(id);
+        //将之前的公告消息的公告id设置为null
+        messageService.deleteByAnnounceId(id);
     }
 
     /**
@@ -107,8 +134,10 @@ public class ChatAnnounceServiceImpl extends ServiceImpl<ChatAnnounceDao, ChatAn
      */
     @Override
     public void deleteBatch(Long[] ids) {
-        for (Long id : ids) {
-            announceDao.deleteById(id);
-        }
+        removeBatchByIds(Arrays.asList(ids));
+
+        //将之前的公告消息的公告id设置为null
+        messageService.deleteBatchByAnnounceId(ids);
+
     }
 }

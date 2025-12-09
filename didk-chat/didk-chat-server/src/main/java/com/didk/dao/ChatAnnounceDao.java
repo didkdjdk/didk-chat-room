@@ -13,11 +13,11 @@ import java.util.Map;
 @Mapper
 public interface ChatAnnounceDao extends BaseDao<ChatAnnounceEntity> {
 
-    List<ChatAnnounceEntity> selectAll(Map<String, Object> params);
+    List<ChatAnnounceEntity> selectByRoomId(Map<String, Object> params);
 
-    List<ChatAnnounceEntity> selectByRoomId(Long roomId);
-
-    List<ChatAnnounceEntity> selectByUserId(Long userId);
+    List<ChatAnnounceEntity> selectByUserIdAndRoomId(Map<String, Object> params);
 
     List<ChatAnnounceEntity> selectPinnedByRoomId(Long roomId);
+
+    ChatAnnounceEntity getById(Long id);
 }

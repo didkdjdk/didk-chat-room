@@ -4,10 +4,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dto.ChatAnnounceDTO;
 import com.didk.entity.ChatAnnounceEntity;
+import com.didk.vo.ChatAnnounceListItemVO;
 import com.didk.vo.ChatAnnounceVO;
 
 import com.didk.commons.tools.page.PageData;
-import java.util.List;
+
 import java.util.Map;
 
 /**
@@ -16,19 +17,14 @@ import java.util.Map;
 public interface ChatAnnounceService extends IService<ChatAnnounceEntity> {
 
     /**
-     * 查询所有公告
+     * 根据群聊ID查询公告
      */
-    PageData<ChatAnnounceVO> listAllAnnounces(Map<String, Object> params);
-
-    /**
-     * 根据群聊id查询公告
-     */
-    List<ChatAnnounceVO> listByRoomId(Long roomId);
+    PageData<ChatAnnounceListItemVO> listByRoomId(Map<String, Object> params);
 
     /**
      * 根据用户id查询发布的公告
      */
-    List<ChatAnnounceVO> listByUserId(Long userId);
+    PageData<ChatAnnounceListItemVO> listByUserId(Map<String, Object> params);
 
     /**
      * 根据id查询公告

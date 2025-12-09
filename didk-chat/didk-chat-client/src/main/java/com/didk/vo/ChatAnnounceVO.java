@@ -27,8 +27,11 @@ public class ChatAnnounceVO implements Serializable {
     @Schema(description = "发布公告用户id")
     private Long userId;
 
-    @Schema(description = "公告标题")
-    private String title;
+    @Schema(description = "发布公告用户用户名")
+    private String username;
+
+    @Schema(description = "发布公告用户头像")
+    private String headImage;
 
     @Schema(description = "公告内容")
     private String content;
@@ -42,8 +45,4 @@ public class ChatAnnounceVO implements Serializable {
     @Schema(description = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createDate;
-
-    @Schema(description = "更新时间")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Date updateDate;
 }

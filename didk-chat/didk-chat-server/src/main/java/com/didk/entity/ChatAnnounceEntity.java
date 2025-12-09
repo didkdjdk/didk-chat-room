@@ -30,11 +30,6 @@ public class ChatAnnounceEntity implements Serializable {
     private Long userId;
 
     /**
-     * 公告标题
-     */
-    private String title;
-
-    /**
      * 公告内容
      */
     private String content;
@@ -54,10 +49,4 @@ public class ChatAnnounceEntity implements Serializable {
      */
     @TableField(fill = FieldFill.INSERT)
     private Date createDate;
-
-    /**
-     * 更新时间
-     */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Date updateDate;
 }

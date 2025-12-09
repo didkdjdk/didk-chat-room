@@ -12,28 +12,58 @@
         <result property="imageUrl" column="image_url"/>
         <result property="isPinned" column="is_pinned"/>
         <result property="createDate" column="create_date"/>
-        <result property="updateDate" column="update_date"/>
     </resultMap>
 
-    <select id="selectAll" resultType="com.didk.entity.ChatAnnounceEntity">
-        select * from chat_announce
-        <where>
-            <if test="roomId != null">
-                and room_id = #{roomId}
-            </if>
-        </where>
+    <select id="selectByRoomId" resultType="com.didk.entity.ChatAnnounceEntity">
+        select chat_announce.id,
+               room_id,
+               title,
+               content,
+               image_url,
+               is_pinned,
+               create_date,
+               sys_user.username
+        from chat_announce
+                 join sys_user on chat_announce.user_id = sys_user.id
+        where room_id = #{roomId}
     </select>
 
-    <select id="selectByRoomId" resultType="com.didk.entity.ChatAnnounceEntity" parameterType="long">
-        select * from chat_announce where room_id = #{roomId}
-    </select>
-
-    <select id="selectByUserId" resultType="com.didk.entity.ChatAnnounceEntity" parameterType="long">
-        select * from chat_announce where user_id = #{userId}
+    <select id="selectByUserIdAndRoomId" resultType="com.didk.entity.ChatAnnounceEntity" parameterType="long">
+        select chat_announce.id,
+               room_id,
+               title,
+               content,
+               image_url,
+               is_pinned,
+               create_date,
+               sys_user.username
+        from chat_announce
+                 join sys_user on chat_announce.user_id = sys_user.id
+        where room_id = #{roomId}
+          and user_id = #{userId}
     </select>
 
     <select id="selectPinnedByRoomId" resultType="com.didk.entity.ChatAnnounceEntity" parameterType="long">
-        select * from chat_announce where room_id = #{roomId} and is_pinned = 1
+        select *
+        from chat_announce
+        where room_id = #{roomId}
+          and is_pinned = 1
+    </select>
+
+    <select id="getById" resultType="com.didk.entity.ChatAnnounceEntity" parameterType="java.lang.Long">
+        select chat_announce.id,
+               room_id,
+               user_id,
+               title,
+               content,
+               image_url,
+               is_pinned,
+               create_date,
+               sys_user.username,
+               head_image
+        from chat_announce
+                 join sys_user on chat_announce.user_id = sys_user.id
+        where chat_announce.id = #{id}
     </select>
 
 </mapper>
