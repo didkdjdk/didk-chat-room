@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("room")
 @Tag(name = "群聊管理")
-@Transactional
 public class ChatRoomController {
 
     @Resource

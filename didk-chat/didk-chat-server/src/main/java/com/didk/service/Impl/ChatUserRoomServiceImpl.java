@@ -19,6 +19,7 @@ import com.didk.vo.ChatRoomMemberVO;
 import com.didk.vo.UserGroupDetailVO;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import java.util.Map;
  * 用户-群聊实现类
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class ChatUserRoomServiceImpl extends ServiceImpl<ChatUserRoomDao, ChatUserRoomEntity> implements ChatUserRoomService {
 
     @Resource

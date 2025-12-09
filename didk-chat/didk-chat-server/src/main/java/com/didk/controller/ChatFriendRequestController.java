@@ -18,7 +18,6 @@ import java.util.List;
 @RestController
 @RequestMapping("friendRequest")
 @Tag(name = "好友请求管理")
-@Transactional
 public class ChatFriendRequestController {
 
     @Resource

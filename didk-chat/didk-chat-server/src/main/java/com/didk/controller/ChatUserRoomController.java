@@ -25,7 +25,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("userRoom")
 @Tag(name = "用户群聊管理")
-@Transactional
 public class ChatUserRoomController {
 
     @Resource

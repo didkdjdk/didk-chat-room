@@ -13,6 +13,7 @@ import com.didk.service.ChatMessageService;
 import com.didk.vo.ChatMessageVO;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import java.util.Map;
  * 消息实现类
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageDao, ChatMessageEntity> implements ChatMessageService {
 
     @Resource

@@ -13,6 +13,7 @@ import com.didk.service.ChatFriendService;
 import com.didk.vo.ChatFriendRequestVO;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -21,6 +22,7 @@ import java.util.List;
  * 好友请求实现类
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class ChatFriendRequestServiceImpl extends ServiceImpl<ChatFriendRequestDao, ChatFriendRequestEntity> implements ChatFriendRequestService {
 
     @Resource

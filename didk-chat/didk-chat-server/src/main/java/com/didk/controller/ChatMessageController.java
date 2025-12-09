@@ -23,7 +23,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("message")
 @Tag(name = "消息管理")
-@Transactional
 public class ChatMessageController {
 
     @Resource

@@ -20,6 +20,7 @@ import com.didk.vo.ChatFriendVO;
 import com.didk.vo.ChatUserVO;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import java.util.Map;
  * 好友实现类
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class ChatFriendServiceImpl extends ServiceImpl<ChatFriendDao, ChatFriendEntity> implements ChatFriendService {
 
     @Resource

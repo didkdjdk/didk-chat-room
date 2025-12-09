@@ -14,6 +14,7 @@ import com.didk.service.ChatUserRoomService;
 import com.didk.vo.ChatRoomRequestVO;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.List;
  * 群聊申请实现类
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class ChatRoomRequestServiceImpl extends ServiceImpl<ChatRoomRequestDao, ChatRoomRequestEntity> implements ChatRoomRequestService {
 
     @Resource

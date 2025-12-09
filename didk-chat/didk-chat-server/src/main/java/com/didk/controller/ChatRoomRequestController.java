@@ -18,7 +18,6 @@ import java.util.List;
 @RestController
 @RequestMapping("roomRequest")
 @Tag(name = "群聊申请管理")
-@Transactional
 public class ChatRoomRequestController {
 
     @Resource
