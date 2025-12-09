@@ -3,6 +3,7 @@ package com.didk.controller;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dto.ChatAnnounceDTO;
 import com.didk.service.ChatAnnounceService;
+import com.didk.vo.ChatAnnounceListItemVO;
 import com.didk.vo.ChatAnnounceVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.didk.commons.tools.page.PageData;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,7 +23,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("announce")
 @Tag(name = "公告管理")
-@Transactional
 public class ChatAnnounceController {
 
     @Resource
@@ -31,7 +30,7 @@ public class ChatAnnounceController {
 
     // 分页查询公告
     @GetMapping("listAllAnnounces")
-    @Operation(summary = "分页查询公告")
+    @Operation(summary = "根据群聊ID查询公告")
     @Parameters({
         @Parameter(name = "page", description = "当前页码，从1开始", required = true),
         @Parameter(name = "limit", description = "每页显示记录数", required = true),
@@ -39,25 +38,25 @@ public class ChatAnnounceController {
         @Parameter(name = "order", description = "排序方式，可选值(asc、desc)"),
         @Parameter(name = "roomId", description = "群聊id"),
     })
-    public Result<PageData<ChatAnnounceVO>> list(@RequestParam Map<String, Object> params) {
-        PageData<ChatAnnounceVO> page = chatAnnounceService.listAllAnnounces(params);
-        return new Result<PageData<ChatAnnounceVO>>().ok(page);
+    public Result<PageData<ChatAnnounceListItemVO>> list(@RequestParam Map<String, Object> params) {
+        PageData<ChatAnnounceListItemVO> page = chatAnnounceService.listByRoomId(params);
+        return new Result<PageData<ChatAnnounceListItemVO>>().ok(page);
     }
 
-    // 根据群聊id查询公告
-    @GetMapping("listByRoomId/{roomId}")
-    @Operation(summary = "根据群聊ID查询公告")
-    public Result<List<ChatAnnounceVO>> listByRoomId(@PathVariable Long roomId) {
-        List<ChatAnnounceVO> data = chatAnnounceService.listByRoomId(roomId);
-        return new Result<List<ChatAnnounceVO>>().ok(data);
-    }
-
-    // 根据用户id查询发布的公告
-    @GetMapping("listByUserId/{userId}")
-    @Operation(summary = "根据用户ID查询发布的公告")
-    public Result<List<ChatAnnounceVO>> listByUserId(@PathVariable Long userId) {
-        List<ChatAnnounceVO> data = chatAnnounceService.listByUserId(userId);
-        return new Result<List<ChatAnnounceVO>>().ok(data);
+    // 根据用户id和群聊id查询发布的公告
+    @GetMapping("listByUserIdAndRoomId")
+    @Operation(summary = "根据用户id和群聊id查询发布的公告")
+    @Parameters({
+            @Parameter(name = "page", description = "当前页码，从1开始", required = true),
+            @Parameter(name = "limit", description = "每页显示记录数", required = true),
+            @Parameter(name = "orderField", description = "排序字段"),
+            @Parameter(name = "order", description = "排序方式，可选值(asc、desc)"),
+            @Parameter(name = "userId", description = "用户id"),
+            @Parameter(name = "roomId", description = "群聊id"),
+    })
+    public Result<PageData<ChatAnnounceListItemVO>> listByUserId(@RequestParam Map<String, Object> params) {
+        PageData<ChatAnnounceListItemVO> data = chatAnnounceService.listByUserId(params);
+        return new Result<PageData<ChatAnnounceListItemVO>>().ok(data);
     }
 
     // 根据id查询公告
