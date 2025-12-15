@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.didk.dao.ChatUserBlockDao">
+
+    <resultMap type="com.didk.entity.ChatUserBlockEntity" id="chatUserBlockMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="targetId" column="target_id"/>
+        <result property="createDate" column="create_date"/>
+    </resultMap>
+
+    <select id="listBlockedUsers" resultMap="chatUserBlockMap">
+        SELECT id, user_id, target_id, create_date
+        FROM chat_user_block
+        WHERE user_id = #{userId}
+        ORDER BY create_date DESC
+    </select>
+
+</mapper>
