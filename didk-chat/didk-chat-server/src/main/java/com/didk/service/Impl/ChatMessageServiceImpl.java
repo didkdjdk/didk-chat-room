@@ -2,6 +2,7 @@ package com.didk.service.Impl;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.didk.commons.security.user.SecurityUser;
 import com.didk.commons.tools.page.PageData;
 import com.didk.commons.tools.utils.ConvertUtils;
 import com.didk.commons.tools.utils.PageUtils;
@@ -9,7 +10,9 @@ import com.didk.commons.tools.utils.Result;
 import com.didk.dao.ChatMessageDao;
 import com.didk.dto.ChatMessageDTO;
 import com.didk.entity.ChatMessageEntity;
+import com.didk.enums.ReceiverTypeEnum;
 import com.didk.service.ChatMessageService;
+import com.didk.service.ChatRoomService;
 import com.didk.vo.ChatMessageVO;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
@@ -27,51 +30,29 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageDao, ChatMess
 
     @Resource
     private ChatMessageDao messageDao;
+    @Resource
+    private ChatRoomService chatRoomService;
 
     /**
-     * 查询所有消息
+     * 游标分页查询私聊消息
      */
     @Override
-    public PageData<ChatMessageVO> listAllMessages(Map<String, Object> params) {
-        IPage<ChatMessageEntity> page = PageUtils.getPage(params, null, false);
-        List<ChatMessageEntity> list = messageDao.selectAll(params);
-        return PageUtils.getPageData(list, page.getTotal(), ChatMessageVO.class);
+    public List<ChatMessageVO> listFriendMessages(Map<String, Object> params) {
+        params.putIfAbsent("limit", 50);
+        Long userId = SecurityUser.getUserId();
+        params.put("userId",userId);
+        return messageDao.selectFriendMessages(params);
     }
 
     /**
-     * 根据发送者id查询消息
+     * 游标分页查询私聊消息
      */
     @Override
-    public List<ChatMessageVO> listBySendId(Long sendId) {
-        List<ChatMessageEntity> messageEntities = messageDao.selectBySendId(sendId);
-        return ConvertUtils.sourceToTarget(messageEntities, ChatMessageVO.class);
-    }
-
-    /**
-     * 根据接收者id和类型查询消息
-     */
-    @Override
-    public List<ChatMessageVO> listByReceiver(Long receiverId, Integer receiverType) {
-        List<ChatMessageEntity> messageEntities = messageDao.selectByReceiverIdAndType(receiverId, receiverType);
-        return ConvertUtils.sourceToTarget(messageEntities, ChatMessageVO.class);
-    }
-
-    /**
-     * 根据群聊id查询消息
-     */
-    @Override
-    public List<ChatMessageVO> listByRoomId(Long roomId) {
-        List<ChatMessageEntity> messageEntities = messageDao.selectByRoomId(roomId);
-        return ConvertUtils.sourceToTarget(messageEntities, ChatMessageVO.class);
-    }
-
-    /**
-     * 根据id查询消息
-     */
-    @Override
-    public ChatMessageVO get(Long id) {
-        ChatMessageEntity messageEntity = messageDao.selectById(id);
-        return ConvertUtils.sourceToTarget(messageEntity, ChatMessageVO.class);
+    public List<ChatMessageVO> listRoomMessages(Map<String, Object> params) {
+        params.putIfAbsent("limit", 50);
+        Long userId = SecurityUser.getUserId();
+        params.put("userId",userId);
+        return messageDao.selectRoomMessages(params);
     }
 
     /**
@@ -79,33 +60,21 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageDao, ChatMess
      */
     @Override
     public Result<?> save(ChatMessageDTO dto) {
-        ChatMessageEntity messageEntity = new ChatMessageEntity();
-        messageEntity.setSendId(dto.getSendId());
-        messageEntity.setReceiverType(dto.getReceiverType());
-        messageEntity.setReceiverId(dto.getReceiverId());
-        messageEntity.setMessageType(dto.getMessageType());
-        messageEntity.setContent(dto.getContent());
-        messageEntity.setAnnounceId(dto.getAnnounceId());
+        Long userId = SecurityUser.getUserId();
+        ChatMessageEntity messageEntity = ConvertUtils.sourceToTarget(dto, ChatMessageEntity.class);
+        messageEntity.setSendId(userId);
 
         messageDao.insert(messageEntity);
+
+        //如果是向群聊中发送信息，则需要增加这个群聊的消息数量
+        if (dto.getReceiverId() == ReceiverTypeEnum.ROOM.getCode()){
+            //统计群聊的总信息数并不需要很强的实时性，可以发送MQ异步处理TODO
+            chatRoomService.incrementSeq(dto.getReceiverId());
+        }
+
+        //websocket发送信息TODO
+
         return new Result<>().ok(null);
     }
-
-    /**
-     * 删除消息
-     */
-    @Override
-    public void delete(Long id) {
-        messageDao.deleteById(id);
-    }
-
-    /**
-     * 批量删除消息
-     */
-    @Override
-    public void deleteBatch(Long[] ids) {
-        for (Long id : ids) {
-            messageDao.deleteById(id);
-        }
-    }
+    
 }

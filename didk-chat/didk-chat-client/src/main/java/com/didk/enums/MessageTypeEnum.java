@@ -20,13 +20,9 @@ public enum MessageTypeEnum {
      */
     FILE(2, "文件"),
     /**
-     * 系统消息
-     */
-    SYSTEM(3, "系统消息"),
-    /**
      * 公告消息
      */
-    ANNOUNCEMENT(4, "公告");
+    ANNOUNCEMENT(3, "公告");
 
     private final int code;
     private final String desc;

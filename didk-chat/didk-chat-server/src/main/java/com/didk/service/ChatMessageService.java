@@ -16,42 +16,19 @@ import java.util.Map;
 public interface ChatMessageService extends IService<ChatMessageEntity> {
 
     /**
-     * 查询所有消息
+     * 游标分页查询私聊消息
      */
-    PageData<ChatMessageVO> listAllMessages(Map<String, Object> params);
+    List<ChatMessageVO> listFriendMessages(Map<String, Object> params);
 
     /**
-     * 根据发送者id查询消息
+     * 游标分页查询群聊消息
      */
-    List<ChatMessageVO> listBySendId(Long sendId);
-
-    /**
-     * 根据接收者id和类型查询消息
-     */
-    List<ChatMessageVO> listByReceiver(Long receiverId, Integer receiverType);
-
-    /**
-     * 根据群聊id查询消息
-     */
-    List<ChatMessageVO> listByRoomId(Long roomId);
-
-    /**
-     * 根据id查询消息
-     */
-    ChatMessageVO get(Long id);
+    List<ChatMessageVO> listRoomMessages(Map<String, Object> params);
 
     /**
      * 发送消息
      */
     Result<?> save(ChatMessageDTO dto);
 
-    /**
-     * 删除消息
-     */
-    void delete(Long id);
 
-    /**
-     * 批量删除消息
-     */
-    void deleteBatch(Long[] ids);
 }

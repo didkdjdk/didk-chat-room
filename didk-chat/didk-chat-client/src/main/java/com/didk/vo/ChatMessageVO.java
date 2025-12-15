@@ -30,7 +30,7 @@ public class ChatMessageVO implements Serializable {
     @Schema(description = "接收者id")
     private Long receiverId;
 
-    @Schema(description = "消息类型：0-文本 1-图片 2-文件 3-系统消息 4-公告")
+    @Schema(description = "消息类型：0-文本 1-图片 2-文件 3-公告")
     private Integer messageType;
 
     @Schema(description = "内容（文本或url地址）")
