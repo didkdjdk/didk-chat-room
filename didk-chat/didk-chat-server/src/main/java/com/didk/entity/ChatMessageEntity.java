@@ -25,6 +25,11 @@ public class ChatMessageEntity implements Serializable {
     private Long sendId;
 
     /**
+     * 服务端消息id
+     */
+    private Long serverMsgId;
+
+    /**
      * 接收者类型（0用户 1群聊）
      */
     private Integer receiverType;

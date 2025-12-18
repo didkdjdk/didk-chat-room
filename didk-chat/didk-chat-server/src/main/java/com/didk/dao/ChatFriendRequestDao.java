@@ -5,6 +5,7 @@ import com.didk.entity.ChatFriendRequestEntity;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 好友请求DAO
@@ -12,7 +13,7 @@ import java.util.List;
 @Mapper
 public interface ChatFriendRequestDao extends BaseDao<ChatFriendRequestEntity> {
 
-    List<ChatFriendRequestEntity> selectByUserId(Long userId);
+    List<ChatFriendRequestEntity> selectByUserId(Map<String, Object> params);
 
     ChatFriendRequestEntity selectByFromAndToUser(Long fromUserId, Long toUserId);
 }

@@ -4,10 +4,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dto.ChatUserRoomDTO;
 import com.didk.entity.ChatUserRoomEntity;
-import com.didk.vo.ChatConversationListItemVO;
+import com.didk.vo.ChatRoomListItemVO;
 import com.didk.vo.ChatRoomMemberVO;
 
-import com.didk.commons.tools.page.PageData;
 import com.didk.vo.UserGroupDetailVO;
 
 import java.util.List;
@@ -19,9 +18,9 @@ import java.util.Map;
 public interface ChatUserRoomService extends IService<ChatUserRoomEntity> {
 
     /**
-     * 根据用户id查询群聊
+     * 查询当前用户加入的群聊
      */
-    PageData<ChatConversationListItemVO> listByUserId(Map<String, Object> params);
+    List<ChatRoomListItemVO> listCurrentRoom(Map<String, Object> params);
 
     /**
      * 用户查看自己的某个的群聊的信息
@@ -39,7 +38,7 @@ public interface ChatUserRoomService extends IService<ChatUserRoomEntity> {
     Result<?> save(Long userId, Long roomId, Integer role);
 
     /**
-     * 修改用户在群聊中的信息（如群昵称、置顶等）
+     * 修改用户在群聊中的信息（如群昵称等）
      */
     Result<?> update(ChatUserRoomDTO dto);
 

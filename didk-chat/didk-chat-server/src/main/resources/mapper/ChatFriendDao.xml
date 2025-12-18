@@ -10,11 +10,6 @@
         <result property="friendName" column="friend_name"/>
         <result property="status" column="status"/>
         <result property="alias" column="alias"/>
-        <result property="isPinned" column="is_pinned"/>
-        <result property="unreadCount" column="unread_count"/>
-        <result property="lastMsgContent" column="last_msg_content"/>
-        <result property="lastMsgTime" column="last_msg_time"/>
-        <result property="lastMsgType" column="last_msg_type"/>
         <result property="createDate" column="create_date"/>
     </resultMap>
 
@@ -72,7 +67,7 @@
     </select>
 
     <select id="getById" resultType="com.didk.vo.ChatFriendVO" parameterType="java.lang.Long">
-        select id,friend_id,friend_name,alias,is_pinned,create_date from chat_friend where id = #{id}
+        select id,friend_id,friend_name,alias,create_date from chat_friend where id = #{id}
     </select>
 
     <select id="selectByUserAndFriend" resultType="com.didk.entity.ChatFriendEntity">

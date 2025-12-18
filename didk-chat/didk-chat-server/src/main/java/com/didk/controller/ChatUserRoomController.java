@@ -3,7 +3,7 @@ package com.didk.controller;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dto.ChatUserRoomDTO;
 import com.didk.service.ChatUserRoomService;
-import com.didk.vo.ChatConversationListItemVO;
+import com.didk.vo.ChatRoomListItemVO;
 import com.didk.vo.ChatRoomMemberVO;
 import com.didk.vo.UserGroupDetailVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,10 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-
-import com.didk.commons.tools.page.PageData;
 
 import java.util.List;
 import java.util.Map;
@@ -30,20 +27,18 @@ public class ChatUserRoomController {
     @Resource
     private ChatUserRoomService chatUserRoomService;
 
-    // 根据用户id查询加入的群聊
+    // 查询当前用户加入的群聊
     @GetMapping("listByUserId")
-    @Operation(summary = "根据用户id查询加入的群聊")
+    @Operation(summary = "查询当前用户加入的群聊")
     @Parameters({
-            @Parameter(name = "page", description = "当前页码，从1开始", required = true),
-            @Parameter(name = "limit", description = "每页显示记录数", required = true),
-            @Parameter(name = "orderField", description = "排序字段"),
-            @Parameter(name = "order", description = "排序方式，可选值(asc、desc)"),
+            @Parameter(name = "limit", description = "每页显示记录数(默认50)"),
             @Parameter(name = "userId", description = "用户ID"),
             @Parameter(name = "roomName", description = "群聊名称模糊查询"),
+            @Parameter(name = "lastCreateDate", description = "最后一个群聊的创建时间")
     })
-    public Result<PageData<ChatConversationListItemVO>> listByUserId(@RequestParam Map<String, Object> params) {
-        PageData<ChatConversationListItemVO> data = chatUserRoomService.listByUserId(params);
-        return new Result<PageData<ChatConversationListItemVO>>().ok(data);
+    public Result<List<ChatRoomListItemVO>> listByUserId(@RequestParam Map<String, Object> params) {
+        List<ChatRoomListItemVO> data = chatUserRoomService.listCurrentRoom(params);
+        return new Result<List<ChatRoomListItemVO>>().ok(data);
     }
 
     // 用户查看自己的某个的群聊的信息
@@ -69,9 +64,9 @@ public class ChatUserRoomController {
         return chatUserRoomService.save(userId,roomId,0);
     }
 
-    // 修改用户在群聊中的信息（如群昵称、置顶等）
+    // 修改用户在群聊中的信息（如群昵称等）
     @PutMapping
-    @Operation(summary = "修改用户在群聊中的信息")
+    @Operation(summary = "修改用户在群聊中的信息（如群昵称）")
     public Result<?> update(@RequestBody ChatUserRoomDTO dto) {
         return chatUserRoomService.update(dto);
     }

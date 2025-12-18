@@ -1,11 +1,8 @@
 package com.didk.service.Impl;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.didk.commons.security.user.SecurityUser;
-import com.didk.commons.tools.page.PageData;
 import com.didk.commons.tools.utils.ConvertUtils;
-import com.didk.commons.tools.utils.PageUtils;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dao.ChatAnnounceDao;
 import com.didk.dto.ChatAnnounceDTO;
@@ -39,23 +36,21 @@ public class ChatAnnounceServiceImpl extends ServiceImpl<ChatAnnounceDao, ChatAn
     private ChatMessageService messageService;
 
     /**
-     * 分页查询公告
+     * 游标分页查询公告
      */
     @Override
-    public PageData<ChatAnnounceListItemVO> listByRoomId(Map<String, Object> params) {
-        IPage<ChatAnnounceEntity> page = PageUtils.getPage(params, null, false);
-        List<ChatAnnounceEntity> list = announceDao.selectByRoomId(params);
-        return PageUtils.getPageData(list, page.getTotal(), ChatAnnounceListItemVO.class);
+    public List<ChatAnnounceListItemVO> listByRoomId(Map<String, Object> params) {
+        params.putIfAbsent("limit", 50);
+        return announceDao.selectByRoomId(params);
     }
 
     /**
-     * 根据用户id查询发布的公告
+     * 根据用户id游标查询发布的公告
      */
     @Override
-    public PageData<ChatAnnounceListItemVO> listByUserId(Map<String, Object> params) {
-        IPage<ChatAnnounceEntity> page = PageUtils.getPage(params, null, false);
-        List<ChatAnnounceEntity> announceEntities = announceDao.selectByUserIdAndRoomId(params);
-        return PageUtils.getPageData(announceEntities, page.getTotal(), ChatAnnounceListItemVO.class);
+    public List<ChatAnnounceListItemVO> listByUserId(Map<String, Object> params) {
+        params.putIfAbsent("limit", 50);
+        return announceDao.selectByUserIdAndRoomId(params);
     }
 
     /**
@@ -97,14 +92,14 @@ public class ChatAnnounceServiceImpl extends ServiceImpl<ChatAnnounceDao, ChatAn
     @Override
     public Result<?> update(ChatAnnounceDTO dto) {
         Long userId = SecurityUser.getUserId();
-        //修改公告信息（需要刷新创建时间）
+        //修改公告数据（需要刷新创建时间）
         ChatAnnounceEntity announceEntity = ConvertUtils.sourceToTarget(dto, ChatAnnounceEntity.class);
         announceEntity.setUserId(userId);
         announceEntity.setCreateDate(new Date());
         announceDao.updateById(announceEntity);
 
         //将之前的公告消息的公告id设置为null
-        messageService.deleteByAnnounceId(announceEntity.getId());
+        messageService.deleteAnnounceId(announceEntity.getId());
 
         //添加新的公告消息
         ChatMessageDTO chatMessageDTO = new ChatMessageDTO();
@@ -126,7 +121,7 @@ public class ChatAnnounceServiceImpl extends ServiceImpl<ChatAnnounceDao, ChatAn
     public void delete(Long id) {
         announceDao.deleteById(id);
         //将之前的公告消息的公告id设置为null
-        messageService.deleteByAnnounceId(id);
+        messageService.deleteAnnounceId(id);
     }
 
     /**
@@ -137,7 +132,7 @@ public class ChatAnnounceServiceImpl extends ServiceImpl<ChatAnnounceDao, ChatAn
         removeBatchByIds(Arrays.asList(ids));
 
         //将之前的公告消息的公告id设置为null
-        messageService.deleteBatchByAnnounceId(ids);
+        messageService.deleteBatchAnnounceId(ids);
 
     }
 }

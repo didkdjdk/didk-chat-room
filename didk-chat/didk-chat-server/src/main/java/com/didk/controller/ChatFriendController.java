@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import com.didk.commons.tools.page.PageData;
@@ -61,9 +60,9 @@ public class ChatFriendController {
         return new Result<ChatUserVO>().ok(data);
     }
 
-    // 修改好友关系（如修改备注、置顶等）
+    // 修改好友关系（如修改备注等）
     @PutMapping
-    @Operation(summary = "修改好友关系")
+    @Operation(summary = "修改好友关系（如修改备注）")
     public Result<?> update(@RequestBody ChatFriendDTO dto) {
         return chatFriendService.update(dto);
     }

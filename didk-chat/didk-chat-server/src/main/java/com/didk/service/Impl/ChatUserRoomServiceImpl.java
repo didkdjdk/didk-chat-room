@@ -1,20 +1,16 @@
 package com.didk.service.Impl;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.didk.commons.security.user.SecurityUser;
-import com.didk.commons.tools.page.PageData;
-import com.didk.commons.tools.utils.PageUtils;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dao.ChatUserRoomDao;
 import com.didk.dto.ChatUserRoomDTO;
 import com.didk.entity.ChatUserRoomEntity;
-import com.didk.enums.PinnedStatusEnum;
 import com.didk.enums.UserRoomExitStatusEnum;
 import com.didk.enums.UserRoomRoleEnum;
 import com.didk.service.ChatRoomService;
 import com.didk.service.ChatUserRoomService;
-import com.didk.vo.ChatConversationListItemVO;
+import com.didk.vo.ChatRoomListItemVO;
 import com.didk.vo.ChatRoomMemberVO;
 import com.didk.vo.UserGroupDetailVO;
 import jakarta.annotation.Resource;
@@ -40,11 +36,11 @@ public class ChatUserRoomServiceImpl extends ServiceImpl<ChatUserRoomDao, ChatUs
      * 根据群主id查询群聊
      */
     @Override
-    public PageData<ChatConversationListItemVO> listByUserId(Map<String, Object> params) {
-        PageUtils.paramsToLike(params,"roomName");
-        IPage<ChatConversationListItemVO> page = PageUtils.getPage(params, null, false);
-        List<ChatConversationListItemVO> list = userRoomDao.selectByUserId(params);
-        return PageUtils.getPageData(list, page.getTotal(), ChatConversationListItemVO.class);
+    public List<ChatRoomListItemVO> listCurrentRoom(Map<String, Object> params) {
+        params.putIfAbsent("limit", 50);
+        Long userId = SecurityUser.getUserId();
+        params.put("userId",userId);
+        return userRoomDao.selectByUserId(params);
     }
 
     /**
@@ -74,7 +70,6 @@ public class ChatUserRoomServiceImpl extends ServiceImpl<ChatUserRoomDao, ChatUs
             userRoomEntity.setUserId(userId);
             userRoomEntity.setRoomId(roomId);
             userRoomEntity.setRole(role);
-            userRoomEntity.setIsPinned(PinnedStatusEnum.NOT_PINNED.getCode());
             userRoomEntity.setIsExit(UserRoomExitStatusEnum.NOT_EXITED.getCode());
 
             userRoomDao.insert(userRoomEntity);
@@ -98,13 +93,12 @@ public class ChatUserRoomServiceImpl extends ServiceImpl<ChatUserRoomDao, ChatUs
     }
 
     /**
-     * 修改用户在群聊中的信息（如群昵称、置顶等）
+     * 修改用户在群聊中的信息（如群昵称等）
      */
     @Override
     public Result<?> update(ChatUserRoomDTO dto) {
         ChatUserRoomEntity userRoomEntity = new ChatUserRoomEntity();
         userRoomEntity.setId(dto.getId());
-        userRoomEntity.setIsPinned(dto.getIsPinned());
         userRoomEntity.setAlias(dto.getAlias());
 
         userRoomDao.updateById(userRoomEntity);

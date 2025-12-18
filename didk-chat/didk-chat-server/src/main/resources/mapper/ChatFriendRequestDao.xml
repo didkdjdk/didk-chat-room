@@ -14,7 +14,16 @@
     </resultMap>
 
     <select id="selectByUserId" resultType="com.didk.entity.ChatFriendRequestEntity" parameterType="long">
-        select * from chat_friend_request where from_user_id = #{userId} or to_user_id = #{userId} order by create_date desc
+        SELECT * FROM chat_friend_request
+        WHERE
+        (from_user_id = #{userId} OR to_user_id = #{userId})
+
+        <if test="lastCreateDate != null">
+            AND create_date &lt; #{lastCreateDate}
+        </if>
+
+        ORDER BY create_date DESC
+        LIMIT #{limit}
     </select>
 
     <select id="selectByFromAndToUser" resultType="com.didk.entity.ChatFriendRequestEntity">

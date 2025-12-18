@@ -47,7 +47,7 @@ public class ChatMessageController {
             @Parameter(name = "sendId", description = "发送者id"),
             @Parameter(name = "limit", description = "每页显示记录数(默认50)"),
             @Parameter(name = "receiverType", description = "消息类型：0-文本 1-图片 2-文件 3-系统消息 4-公告"),
-            @Parameter(name = "lastCreateDate", description = "最后一条公告的创建时间")
+            @Parameter(name = "lastCreateDate", description = "最后一条消息的创建时间")
     })
     public Result<List<ChatMessageVO>> listRoomMessages(@RequestParam Map<String, Object> params) {
         List<ChatMessageVO> page = chatMessageService.listRoomMessages(params);

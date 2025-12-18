@@ -7,17 +7,15 @@
         <result property="id" column="id"/>
         <result property="roomId" column="room_id"/>
         <result property="userId" column="user_id"/>
-        <result property="title" column="title"/>
         <result property="content" column="content"/>
         <result property="imageUrl" column="image_url"/>
         <result property="isPinned" column="is_pinned"/>
         <result property="createDate" column="create_date"/>
     </resultMap>
 
-    <select id="selectByRoomId" resultType="com.didk.entity.ChatAnnounceEntity">
+    <select id="selectByRoomId" resultType="com.didk.vo.ChatAnnounceListItemVO">
         select chat_announce.id,
                room_id,
-               title,
                content,
                image_url,
                is_pinned,
@@ -26,12 +24,16 @@
         from chat_announce
                  join sys_user on chat_announce.user_id = sys_user.id
         where room_id = #{roomId}
+        <if test="lastCreateDate != null">
+            AND create_date &lt; #{lastCreateDate}
+        </if>
+        order by is_pinned,create_date desc
+        LIMIT #{limit}
     </select>
 
-    <select id="selectByUserIdAndRoomId" resultType="com.didk.entity.ChatAnnounceEntity" parameterType="long">
+    <select id="selectByUserIdAndRoomId" resultType="com.didk.vo.ChatAnnounceListItemVO" parameterType="long">
         select chat_announce.id,
                room_id,
-               title,
                content,
                image_url,
                is_pinned,
@@ -41,20 +43,17 @@
                  join sys_user on chat_announce.user_id = sys_user.id
         where room_id = #{roomId}
           and user_id = #{userId}
-    </select>
-
-    <select id="selectPinnedByRoomId" resultType="com.didk.entity.ChatAnnounceEntity" parameterType="long">
-        select *
-        from chat_announce
-        where room_id = #{roomId}
-          and is_pinned = 1
+        <if test="lastCreateDate != null">
+            AND create_date &lt; #{lastCreateDate}
+        </if>
+        order by create_date desc
+        LIMIT #{limit}
     </select>
 
     <select id="getById" resultType="com.didk.entity.ChatAnnounceEntity" parameterType="java.lang.Long">
         select chat_announce.id,
                room_id,
                user_id,
-               title,
                content,
                image_url,
                is_pinned,

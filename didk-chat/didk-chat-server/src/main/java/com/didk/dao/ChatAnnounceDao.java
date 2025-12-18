@@ -2,6 +2,7 @@ package com.didk.dao;
 
 import com.didk.commons.mybatis.dao.BaseDao;
 import com.didk.entity.ChatAnnounceEntity;
+import com.didk.vo.ChatAnnounceListItemVO;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -13,11 +14,9 @@ import java.util.Map;
 @Mapper
 public interface ChatAnnounceDao extends BaseDao<ChatAnnounceEntity> {
 
-    List<ChatAnnounceEntity> selectByRoomId(Map<String, Object> params);
+    List<ChatAnnounceListItemVO> selectByRoomId(Map<String, Object> params);
 
-    List<ChatAnnounceEntity> selectByUserIdAndRoomId(Map<String, Object> params);
-
-    List<ChatAnnounceEntity> selectPinnedByRoomId(Long roomId);
+    List<ChatAnnounceListItemVO> selectByUserIdAndRoomId(Map<String, Object> params);
 
     ChatAnnounceEntity getById(Long id);
 }

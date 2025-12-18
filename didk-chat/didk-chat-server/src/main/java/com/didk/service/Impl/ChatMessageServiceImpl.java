@@ -1,11 +1,8 @@
 package com.didk.service.Impl;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.didk.commons.security.user.SecurityUser;
-import com.didk.commons.tools.page.PageData;
 import com.didk.commons.tools.utils.ConvertUtils;
-import com.didk.commons.tools.utils.PageUtils;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dao.ChatMessageDao;
 import com.didk.dto.ChatMessageDTO;
@@ -66,15 +63,36 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageDao, ChatMess
 
         messageDao.insert(messageEntity);
 
-        //如果是向群聊中发送信息，则需要增加这个群聊的消息数量
         if (dto.getReceiverId() == ReceiverTypeEnum.ROOM.getCode()){
+            //向群聊中发送信息，需要增加这个群聊的消息数量
             //统计群聊的总信息数并不需要很强的实时性，可以发送MQ异步处理TODO
             chatRoomService.incrementSeq(dto.getReceiverId());
         }
+
+        //更新发送方会话窗口的数据（添加或修改，异步）
+
+        //更新接收方会话窗口的数据
+
 
         //websocket发送信息TODO
 
         return new Result<>().ok(null);
     }
-    
+
+    /**
+     * 根据公告id删除公告消息中的公告id
+     */
+    @Override
+    public void deleteAnnounceId(Long id) {
+        messageDao.setAnnounceIdNull(id);
+    }
+
+    /**
+     * 根据公告id批量删除公告消息中的公告id
+     */
+    @Override
+    public void deleteBatchAnnounceId(Long[] ids) {
+        messageDao.setAnnounceIdNullBatch(ids);
+    }
+
 }

@@ -9,6 +9,7 @@ import com.didk.vo.ChatAnnounceVO;
 
 import com.didk.commons.tools.page.PageData;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,14 +18,14 @@ import java.util.Map;
 public interface ChatAnnounceService extends IService<ChatAnnounceEntity> {
 
     /**
-     * 根据群聊ID查询公告
+     * 根据群聊ID游标查询公告
      */
-    PageData<ChatAnnounceListItemVO> listByRoomId(Map<String, Object> params);
+    List<ChatAnnounceListItemVO> listByRoomId(Map<String, Object> params);
 
     /**
-     * 根据用户id查询发布的公告
+     * 根据用户id游标查询发布的公告
      */
-    PageData<ChatAnnounceListItemVO> listByUserId(Map<String, Object> params);
+    List<ChatAnnounceListItemVO> listByUserId(Map<String, Object> params);
 
     /**
      * 根据id查询公告

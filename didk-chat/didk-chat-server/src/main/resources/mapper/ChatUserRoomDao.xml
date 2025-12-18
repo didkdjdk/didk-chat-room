@@ -8,37 +8,29 @@
         <result property="userId" column="user_id"/>
         <result property="roomId" column="room_id"/>
         <result property="role" column="role"/>
-        <result property="isPinned" column="is_pinned"/>
         <result property="alias" column="alias"/>
         <result property="isExit" column="is_exit"/>
-        <result property="readSeq" column="read_seq"/>
-        <result property="lastMsgContent" column="last_msg_content"/>
-        <result property="lastMsgTime" column="last_msg_time"/>
-        <result property="lastMsgType" column="last_msg_type"/>
         <result property="createDate" column="create_date"/>
     </resultMap>
 
-    <select id="selectByUserId" resultType="com.didk.vo.ChatConversationListItemVO" parameterType="java.lang.Long">
+    <select id="selectByUserId" resultType="com.didk.vo.ChatRoomListItemVO" parameterType="java.lang.Long">
         SELECT
         r.id AS id,
         -- 如果用户设置了群昵称（alias），优先显示群昵称，否则显示群名称
         COALESCE(ur.alias, r.room_name) AS name,
-        r.head_url AS avatar,
-        ur.is_pinned AS is_pinned,
-        ur.last_msg_time AS last_msg_time,
-        ur.last_msg_content AS last_msg_content,
-        ur.last_msg_type AS last_msg_type,
-        /* 逻辑：(群总消息序号 - 用户已读序号)，如果结果小于0则为0 (使用COALESCE处理NULL值) */
-        (IF((COALESCE(r.total_seq, 0) - COALESCE(ur.read_seq, 0)) > 0, (r.total_seq - ur.read_seq), 0)) AS unread_count
+        r.head_url AS image
         FROM chat_user_room ur
         JOIN chat_room r ON ur.room_id = r.id
         WHERE ur.user_id = #{userId}
-        <if test="friendName != null and friendName.trim()!=''">
-            AND (r.room_name LIKE #{roomName})
-            OR ur.alias LIKE #{roomName})
+        <if test="roomName != null and roomName.trim()!=''">
+            AND ((r.room_name LIKE CONCAT('%', #{roomName}, '%'))
+            OR ur.alias LIKE CONCAT('%', #{roomName}, '%'))
         </if>
-        -- 排序：置顶优先，然后按最后一条消息时间倒序
-        ORDER BY ur.is_pinned DESC, ur.last_msg_time DESC
+        <if test="lastCreateDate != null">
+            AND ur.create_date &lt; #{lastCreateDate}
+        </if>
+        ORDER BY ur.create_date DESC
+        LIMIT #{limit}
     </select>
 
     <select id="getGroupChatDetail" resultType="com.didk.vo.UserGroupDetailVO">
@@ -54,7 +46,6 @@
             -- 用户专属信息 (来自 chat_user_room)
             ur.alias AS alias,
             ur.role AS userRole,
-            ur.is_pinned AS isPinned,
 
             -- 查询最新公告的文本内容
             (
@@ -73,24 +64,6 @@
           AND ur.is_exit = 0
     </select>
 
-    <select id="selectAll" resultType="com.didk.entity.ChatUserRoomEntity">
-        select * from chat_user_room
-        <where>
-            <if test="userId != null">
-                and user_id = #{userId}
-            </if>
-            <if test="roomId != null">
-                and room_id = #{roomId}
-            </if>
-            <if test="role != null">
-                and role = #{role}
-            </if>
-            <if test="isExit != null">
-                and is_exit = #{isExit}
-            </if>
-        </where>
-    </select>
-
     <select id="selectByRoomId" resultType="com.didk.vo.ChatRoomMemberVO" parameterType="long">
         select chat_user_room.id,user_id,role,username,head_image from chat_user_room
             join sys_user on chat_user_room.user_id = sys_user.id
@@ -103,14 +76,6 @@
     <select id="selectByUserAndRoom" resultType="com.didk.entity.ChatUserRoomEntity">
         select * from chat_user_room where user_id = #{userId} and room_id = #{roomId}
     </select>
-
-    <select id="selectAdminsByRoomId" resultType="com.didk.entity.ChatUserRoomEntity" parameterType="long">
-        select * from chat_user_room where room_id = #{roomId} and (role = 0 or role = 1) and is_exit = 0
-    </select>
-
-    <update id="updateExitStatus">
-        update chat_user_room set is_exit = #{isExit} where user_id = #{userId} and room_id = #{roomId}
-    </update>
 
     <update id="updateExitStatusBatch" parameterType="java.lang.Long">
         UPDATE chat_user_room

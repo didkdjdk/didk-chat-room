@@ -10,11 +10,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import com.didk.commons.tools.page.PageData;
-
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,35 +26,31 @@ public class ChatAnnounceController {
     @Resource
     private ChatAnnounceService chatAnnounceService;
 
-    // 分页查询公告
+    // 游标分页查询公告
     @GetMapping("listAllAnnounces")
-    @Operation(summary = "根据群聊ID查询公告")
+    @Operation(summary = "根据群聊ID游标查询公告")
     @Parameters({
-        @Parameter(name = "page", description = "当前页码，从1开始", required = true),
-        @Parameter(name = "limit", description = "每页显示记录数", required = true),
-        @Parameter(name = "orderField", description = "排序字段"),
-        @Parameter(name = "order", description = "排序方式，可选值(asc、desc)"),
-        @Parameter(name = "roomId", description = "群聊id"),
+            @Parameter(name = "limit", description = "每页显示记录数(默认50)"),
+            @Parameter(name = "roomId", description = "群聊id"),
+            @Parameter(name = "lastCreateDate", description = "最后一条公告的创建时间")
     })
-    public Result<PageData<ChatAnnounceListItemVO>> list(@RequestParam Map<String, Object> params) {
-        PageData<ChatAnnounceListItemVO> page = chatAnnounceService.listByRoomId(params);
-        return new Result<PageData<ChatAnnounceListItemVO>>().ok(page);
+    public Result<List<ChatAnnounceListItemVO>> list(@RequestParam Map<String, Object> params) {
+        List<ChatAnnounceListItemVO> page = chatAnnounceService.listByRoomId(params);
+        return new Result<List<ChatAnnounceListItemVO>>().ok(page);
     }
 
-    // 根据用户id和群聊id查询发布的公告
+    // 根据用户id和群聊id游标查询发布的公告
     @GetMapping("listByUserIdAndRoomId")
-    @Operation(summary = "根据用户id和群聊id查询发布的公告")
+    @Operation(summary = "根据用户id和群聊id游标查询发布的公告")
     @Parameters({
-            @Parameter(name = "page", description = "当前页码，从1开始", required = true),
-            @Parameter(name = "limit", description = "每页显示记录数", required = true),
-            @Parameter(name = "orderField", description = "排序字段"),
-            @Parameter(name = "order", description = "排序方式，可选值(asc、desc)"),
+            @Parameter(name = "limit", description = "每页显示记录数(默认50)"),
             @Parameter(name = "userId", description = "用户id"),
             @Parameter(name = "roomId", description = "群聊id"),
+            @Parameter(name = "lastCreateDate", description = "最后一条公告的创建时间")
     })
-    public Result<PageData<ChatAnnounceListItemVO>> listByUserId(@RequestParam Map<String, Object> params) {
-        PageData<ChatAnnounceListItemVO> data = chatAnnounceService.listByUserId(params);
-        return new Result<PageData<ChatAnnounceListItemVO>>().ok(data);
+    public Result<List<ChatAnnounceListItemVO>> listByUserId(@RequestParam Map<String, Object> params) {
+        List<ChatAnnounceListItemVO> data = chatAnnounceService.listByUserId(params);
+        return new Result<List<ChatAnnounceListItemVO>>().ok(data);
     }
 
     // 根据id查询公告

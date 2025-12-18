@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 群聊申请实现类
@@ -33,11 +34,12 @@ public class ChatRoomRequestServiceImpl extends ServiceImpl<ChatRoomRequestDao, 
     private ChatUserRoomService userRoomService;
 
     /**
-     * 根据群聊id查询申请列表
+     * 根据群聊id游标查询申请列表
      */
     @Override
-    public List<ChatRoomRequestVO> listByRoomId(Long roomId) {
-        List<ChatRoomRequestEntity> requestEntities = roomRequestDao.selectByRoomId(roomId);
+    public List<ChatRoomRequestVO> listByRoomId(Map<String, Object> params) {
+        params.putIfAbsent("limit", 50);
+        List<ChatRoomRequestEntity> requestEntities = roomRequestDao.selectByRoomId(params);
         return ConvertUtils.sourceToTarget(requestEntities, ChatRoomRequestVO.class);
     }
 

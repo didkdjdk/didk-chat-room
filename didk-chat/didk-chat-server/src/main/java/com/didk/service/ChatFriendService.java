@@ -39,7 +39,7 @@ public interface ChatFriendService extends IService<ChatFriendEntity> {
     Result<?> save(Long userId, Long friendId);
 
     /**
-     * 修改好友关系（如修改备注、置顶等）
+     * 修改好友关系（如修改备注等）
      */
     Result<?> update(ChatFriendDTO dto);
 

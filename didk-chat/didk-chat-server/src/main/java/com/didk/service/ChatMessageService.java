@@ -6,7 +6,6 @@ import com.didk.dto.ChatMessageDTO;
 import com.didk.entity.ChatMessageEntity;
 import com.didk.vo.ChatMessageVO;
 
-import com.didk.commons.tools.page.PageData;
 import java.util.List;
 import java.util.Map;
 
@@ -30,5 +29,13 @@ public interface ChatMessageService extends IService<ChatMessageEntity> {
      */
     Result<?> save(ChatMessageDTO dto);
 
+    /**
+     * 根据公告id删除公告消息中的公告id
+     */
+    void deleteAnnounceId(Long id);
 
+    /**
+     * 根据公告id批量删除公告消息中的公告id
+     */
+    void deleteBatchAnnounceId(Long[] ids);
 }

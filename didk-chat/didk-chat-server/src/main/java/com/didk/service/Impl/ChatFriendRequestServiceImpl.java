@@ -1,6 +1,7 @@
 package com.didk.service.Impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.didk.commons.security.user.SecurityUser;
 import com.didk.commons.tools.utils.ConvertUtils;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dao.ChatFriendRequestDao;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 好友请求实现类
@@ -31,11 +33,14 @@ public class ChatFriendRequestServiceImpl extends ServiceImpl<ChatFriendRequestD
     private ChatFriendService friendService;
 
     /**
-     * 根据接收用户id查询好友请求列表
+     * 游标查询当前用户的好友请求列表(查询发送方或接收方是自己的好友请求)
      */
     @Override
-    public List<ChatFriendRequestVO> listByUserId(Long userId) {
-        List<ChatFriendRequestEntity> requestEntities = friendRequestDao.selectByUserId(userId);
+    public List<ChatFriendRequestVO> listCurrentUser(Map<String, Object> params) {
+        params.putIfAbsent("limit", 50);
+        Long userId = SecurityUser.getUserId();
+        params.put("userId",userId);
+        List<ChatFriendRequestEntity> requestEntities = friendRequestDao.selectByUserId(params);
         return ConvertUtils.sourceToTarget(requestEntities, ChatFriendRequestVO.class);
     }
 

@@ -17,4 +17,8 @@ public interface ChatMessageDao extends BaseDao<ChatMessageEntity> {
     List<ChatMessageVO> selectFriendMessages(Map<String, Object> params);
 
     List<ChatMessageVO> selectRoomMessages(Map<String, Object> params);
+
+    void setAnnounceIdNull(Long id);
+
+    void setAnnounceIdNullBatch(Long[] ids);
 }

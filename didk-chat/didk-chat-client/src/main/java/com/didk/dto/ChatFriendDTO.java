@@ -32,19 +32,4 @@ public class ChatFriendDTO implements Serializable {
 
     @Schema(description = "好友备注名")
     private String alias;
-
-    @Schema(description = "是否置顶：0否 1是")
-    private Integer isPinned;
-
-    @Schema(description = "未读消息数量")
-    private Integer unreadCount;
-
-    @Schema(description = "最后一条消息的内容（文本或url地址）")
-    private String lastMsgContent;
-
-    @Schema(description = "最后一条消息的创建时间（发送时间）")
-    private String lastMsgTime;
-
-    @Schema(description = "最后一条消息的类型(0文本 1图片 2文件 3系统消息 4公告)")
-    private Integer lastMsgType;
 }

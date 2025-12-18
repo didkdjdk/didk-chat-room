@@ -45,31 +45,6 @@ public class ChatFriendEntity implements Serializable {
     private String alias;
 
     /**
-     * 是否置顶：0否 1是
-     */
-    private Integer isPinned;
-
-    /**
-     * 未读消息数量
-     */
-    private Integer unreadCount;
-
-    /**
-     * 最后一条消息的内容（文本或url地址）
-     */
-    private String lastMsgContent;
-
-    /**
-     * 最后一条消息的创建时间（发送时间）
-     */
-    private Date lastMsgTime;
-
-    /**
-     * 最后一条消息的类型(0文本 1图片 2文件 3系统消息 4公告)
-     */
-    private Integer lastMsgType;
-
-    /**
      * 创建日期（正式成为好友时间）
      */
     @TableField(fill = FieldFill.INSERT)

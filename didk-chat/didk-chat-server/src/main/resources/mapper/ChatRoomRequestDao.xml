@@ -17,7 +17,16 @@
     </resultMap>
 
     <select id="selectByRoomId" resultType="com.didk.entity.ChatRoomRequestEntity" parameterType="long">
-        select * from chat_room_request where room_id = #{roomId} order by create_date desc
+        SELECT * FROM chat_room_request
+        WHERE
+        room_id = #{roomId}
+
+        <if test="lastCreateDate != null">
+            AND create_date &lt; #{lastCreateDate}
+        </if>
+
+        ORDER BY create_date DESC
+        LIMIT #{limit}
     </select>
 
     <select id="selectByUserId" resultType="com.didk.entity.ChatRoomRequestEntity" parameterType="long">

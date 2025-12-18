@@ -18,8 +18,11 @@ import java.util.Date;
 public class ChatConversationListItemVO implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "会话id（好友id或群聊id）")
+    @Schema(description = "会话id")
     private Long id;
+
+    @Schema(description = "目标id（对方用户ID或群聊ID）")
+    private Long targetId;
 
     @Schema(description = "会话名称")
     private String name;
@@ -27,8 +30,8 @@ public class ChatConversationListItemVO implements Serializable {
     @Schema(description = "会话头像")
     private String image;
 
-    @Schema(description = "私聊、群聊区分（FRIEND和ROOM）")
-    private String chatType;
+    @Schema(description = "会话类型：0私聊 1群聊")
+    private Integer type;
 
     @Schema(description = "是否置顶：0否 1是")
     private Integer isPinned;

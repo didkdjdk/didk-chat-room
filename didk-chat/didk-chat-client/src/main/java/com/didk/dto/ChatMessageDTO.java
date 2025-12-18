@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -19,6 +19,9 @@ public class ChatMessageDTO implements Serializable {
 
     @Schema(description = "id")
     private Long id;
+
+    //服务端消息id
+    private Long serverMsgId;
 
     @Schema(description = "发送者id")
     private Long sendId;
@@ -39,5 +42,5 @@ public class ChatMessageDTO implements Serializable {
     private Long announceId;
 
     @Schema(description = "消息附件（图片或文件）")
-    private List<MultipartFile> attachments;
+    private List<String> attachments;
 }

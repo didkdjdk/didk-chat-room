@@ -7,6 +7,7 @@ import com.didk.entity.ChatRoomRequestEntity;
 import com.didk.vo.ChatRoomRequestVO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 群聊申请服务类
@@ -14,9 +15,9 @@ import java.util.List;
 public interface ChatRoomRequestService extends IService<ChatRoomRequestEntity> {
 
     /**
-     * 根据群聊id查询申请列表
+     * 根据群聊id游标查询申请列表
      */
-    List<ChatRoomRequestVO> listByRoomId(Long roomId);
+    List<ChatRoomRequestVO> listByRoomId(Map<String, Object> params);
 
     /**
      * 根据用户id查询申请列表

@@ -19,9 +19,7 @@
         join sys_user on chat_message.send_id = sys_user.id
         where ((send_id = #{userId} and receiver_id = #{friendId}) or (send_id = #{friendId} and receiver_id =
         #{userId}))
-        <if test="receiverType != null">
-            and receiver_type = #{receiverType}
-        </if>
+            and receiver_type = 0
         <if test="lastCreateDate != null and lastCreateDate.trim()!=''">
             and create_date &lt; #{lastCreateDate}
 
@@ -33,16 +31,26 @@
         select chat_message.*,sys_user.username,sys_user.head_image from chat_message
         join sys_user on chat_message.send_id = sys_user.id
         where receiver_id = #{roomId}
+        and receiver_type = 1
         <if test="sendId != null">
             and send_id = #{sendId}
-        </if>
-        <if test="receiverType != null">
-            and receiver_type = #{receiverType}
         </if>
         <if test="lastCreateDate != null and lastCreateDate.trim()!=''">
             and create_date &lt; #{lastCreateDate}
         </if>
         order by create_date desc limit #{limit};
     </select>
+
+    <update id="setAnnounceIdNull" parameterType="java.lang.Long">
+        update chat_message set announce_id = null where announce_id = #{announceId}
+    </update>
+
+    <update id="setAnnounceIdNullBatch">
+        update chat_message set announce_id = null where announce_id in
+        <foreach item="id" collection="ids" separator="," close=")" open="(" index="index">
+            #{id}
+        </foreach>
+    </update>
+
 
 </mapper>

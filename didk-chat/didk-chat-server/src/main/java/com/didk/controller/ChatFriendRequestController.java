@@ -5,12 +5,14 @@ import com.didk.dto.ChatFriendRequestDTO;
 import com.didk.service.ChatFriendRequestService;
 import com.didk.vo.ChatFriendRequestVO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 好友请求控制层
@@ -23,11 +25,16 @@ public class ChatFriendRequestController {
     @Resource
     private ChatFriendRequestService chatFriendRequestService;
 
-    // 根据用户id查询好友请求列表(查询发送方或接收方是自己的好友请求)
-    @GetMapping("listByUserId/{userId}")
-    @Operation(summary = "根据用户ID查询好友请求列表")
-    public Result<List<ChatFriendRequestVO>> listByUserId(@PathVariable Long userId) {
-        List<ChatFriendRequestVO> data = chatFriendRequestService.listByUserId(userId);
+    // 游标查询当前用户的好友请求列表(查询发送方或接收方是自己的好友请求)
+    @GetMapping("listCurrentUser")
+    @Operation(summary = "游标查询当前用户的好友请求列表(查询发送方或接收方是自己的好友请求)")
+    @Parameters({
+            @Parameter(name = "limit", description = "每页显示记录数(默认50)"),
+            @Parameter(name = "userId", description = "用户ID"),
+            @Parameter(name = "lastCreateDate", description = "最后一条请求的创建时间")
+    })
+    public Result<List<ChatFriendRequestVO>> listCurrentUser(@RequestParam Map<String, Object> params) {
+        List<ChatFriendRequestVO> data = chatFriendRequestService.listCurrentUser(params);
         return new Result<List<ChatFriendRequestVO>>().ok(data);
     }
 

@@ -35,11 +35,6 @@ public class ChatUserRoomEntity implements Serializable {
     private Integer role;
 
     /**
-     * 是否置顶（0否1是）
-     */
-    private Integer isPinned;
-
-    /**
      * 群昵称
      */
     private String alias;
@@ -48,26 +43,6 @@ public class ChatUserRoomEntity implements Serializable {
      * 是否退出（踢出）群聊0否1是
      */
     private Integer isExit;
-
-    /**
-     * 查看的最后一条消息的序号
-     */
-    private Integer readSeq;
-
-    /**
-     * 最后一条消息的内容（文本或url地址）
-     */
-    private String lastMsgContent;
-
-    /**
-     * 最后一条消息的创建时间（发送时间）
-     */
-    private Date lastMsgTime;
-
-    /**
-     * 最后一条消息的类型(0文本 1图片 2文件 3系统消息 4公告)
-     */
-    private Integer lastMsgType;
 
     /**
      * 创建日期（入群时间）

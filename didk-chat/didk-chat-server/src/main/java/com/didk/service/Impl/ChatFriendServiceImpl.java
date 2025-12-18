@@ -12,7 +12,6 @@ import com.didk.dao.ChatFriendDao;
 import com.didk.dto.ChatFriendDTO;
 import com.didk.entity.ChatFriendEntity;
 import com.didk.enums.FriendStatusEnum;
-import com.didk.enums.PinnedStatusEnum;
 import com.didk.feign.UserFeignClient;
 import com.didk.service.ChatFriendService;
 import com.didk.vo.ChatConversationListItemVO;
@@ -72,7 +71,6 @@ public class ChatFriendServiceImpl extends ServiceImpl<ChatFriendDao, ChatFriend
         friendEntity.setUserId(userId);
         friendEntity.setFriendId(friendId);
         friendEntity.setStatus(FriendStatusEnum.NORMAL.getCode());
-        friendEntity.setIsPinned(PinnedStatusEnum.NOT_PINNED.getCode());
         UserDetail friendInfo = userFeignClient.getById(friendId).getData();
         friendEntity.setFriendName(friendInfo.getUsername());
 
@@ -81,7 +79,7 @@ public class ChatFriendServiceImpl extends ServiceImpl<ChatFriendDao, ChatFriend
     }
 
     /**
-     * 修改好友关系（如修改备注、置顶等）
+     * 修改好友关系（如修改备注等）
      */
     @Override
     public Result<?> update(ChatFriendDTO dto) {
