@@ -12,14 +12,17 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatMessageResp {
-    // === 消息基本信息 ===
+    //消息基本信息
     private Long id;            // 消息ID
     private String content;     // 内容
     private Integer msgType;    // 类型 (文本/图片)
     private Date createTime;    // 时间
 
-    // === 发送者信息 (接收者渲染UI必须要有这些) ===
+    //发送者信息 (接收者渲染UI必须要有这些)
     private UserInfo fromUser;
+
+    //前端临时id
+    private String tempId;
 
     @Data
     public static class UserInfo {

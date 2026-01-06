@@ -2,7 +2,19 @@ package com.didk.listener;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.didk.config.RedisStreamConfig;
+import com.didk.entity.ChatMessageEntity;
+import com.didk.entity.ChatSessionEntity;
+import com.didk.entity.ChatUserRoomEntity;
+import com.didk.enums.MessageTypeEnum;
+import com.didk.enums.ReceiverTypeEnum;
 import com.didk.service.ChatMessageService;
+import com.didk.service.ChatSessionService;
+import com.didk.service.ChatUserRoomService;
+import com.didk.websocket.adapter.WSAdapter;
+import com.didk.websocket.model.response.ChatMessageResp;
+import com.didk.websocket.model.response.WSBaseResp;
+import com.didk.websocket.service.WebSocketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Range;
@@ -18,222 +30,192 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 消息日志消费者
- * 负责：Redis Stream -> MySQL -> WebSocket Push
+ * 负责：Redis Stream -> MySQL (消息入库 + 会话更新) -> WebSocket Push
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class MessageStreamListener implements StreamListener<String, MapRecord<String, String, String>> {
 
-    private final ChatMessageService messageService;
-    private final RoomService roomService;
-    private final UserRoomRelateService userRoomRelateService;
-    private final RoomFriendService roomFriendService;
+    private final ChatMessageService chatMessageService;
+    private final ChatSessionService chatSessionService;
+    private final ChatUserRoomService chatUserRoomService;
     private final WebSocketService webSocketService;
     private final WSAdapter wsAdapter;
     private final TransactionTemplate transactionTemplate;
     private final StringRedisTemplate redisTemplate;
 
-    // 死信队列 Key
     private static final String DLQ_STREAM_KEY = "im:message:dlq";
-    // 最大重试次数
     private static final int MAX_RETRY_COUNT = 3;
 
     @Override
     public void onMessage(MapRecord<String, String, String> record) {
         Map<String, String> value = record.getValue();
-        // 去除键名中的空格
-        String serverMsgIdStr = value.get("server_msg_id");
-        Long serverMsgId = serverMsgIdStr != null ? Long.valueOf(serverMsgIdStr) : null;
-
         String tempId = value.get("tempId");
-        Long fromUserId = Long.valueOf(value.get("fromUserId"));
-        String content = value.get("content");
-        int type = Integer.parseInt(value.get("type"));
-        Long targetId = Long.valueOf(value.get("targetId"));
-
-        // 获取消息内容类型
-        String msgTypeStr = value.get("messageType");
-        int messageType = msgTypeStr != null ? Integer.parseInt(msgTypeStr) : MessageTypeEnum.TEXT.getType();
-
-        // 1 保证幂等性
-        if (serverMsgId != null) {
-            Message existed = messageService.getOne(new LambdaQueryWrapper<Message>()
-                    .eq(Message::getServerMsgId, serverMsgId)
-                    .last("limit 1"));
-            if (existed != null) {
-                log.warn("消息已处理过，执行幂等返回 tempId={}, messageId={}", tempId, existed.getId());
-
-                // 已处理的消息仍然需要推送给当前用户，避免前端卡住
-                pushMessage(existed, tempId, type);
-
-                // ACK 掉 Stream 的消息，避免重复消费
-                redisTemplate.opsForStream().acknowledge(
-                        RedisStreamConfig.IM_STREAM_KEY,
-                        RedisStreamConfig.IM_GROUP,
-                        record.getId());
-
-                return; // 幂等生效：不重复入库
-            }
-        }
-
-        log.info("Stream 收到消息: tempId={}, content={}, msgType={}", tempId, content, messageType);
 
         try {
-            // 1. 确定房间ID
-            Long roomId = resolveRoomId(type, fromUserId, targetId);
-            if (roomId == null) {
-                log.error("未找到房间ID，消息可能非法: tempId={}", tempId);
-                // 这种业务错误通常无法通过重试解决，这里直接 ACK 结束
-                redisTemplate.opsForStream().acknowledge(RedisStreamConfig.IM_STREAM_KEY, RedisStreamConfig.IM_GROUP,
-                        record.getId());
-                return;
+            // 1. 解析数据
+            String serverMsgIdStr = value.get("server_msg_id");
+            Long serverMsgId = serverMsgIdStr != null ? Long.valueOf(serverMsgIdStr) : null;
+
+            Long sendId = Long.valueOf(value.get("fromUserId"));
+            String content = value.get("content");
+            int receiverType = Integer.parseInt(value.get("type"));
+            Long targetId = Long.valueOf(value.get("targetId"));
+
+            String msgTypeStr = value.get("messageType");
+            int messageType = msgTypeStr != null ? Integer.parseInt(msgTypeStr) : MessageTypeEnum.TEXT.getCode();
+
+            // 2. 幂等性检查
+            if (serverMsgId != null) {
+                ChatMessageEntity existed = chatMessageService.getOne(new LambdaQueryWrapper<ChatMessageEntity>()
+                        .eq(ChatMessageEntity::getServerMsgId, serverMsgId)
+                        .last("limit 1"));
+                if (existed != null) {
+                    log.warn("消息重复消费，执行幂等: tempId={}, id={}", tempId, existed.getId());
+                    pushMessage(existed, tempId);
+                    ackMessage(record);
+                    return;
+                }
             }
 
-            // 2. 数据库事务: 落库 + 更新状态
-            Message savedMessage = transactionTemplate.execute(status -> {
-                // 2.1 保存消息
-                Message message = new Message();
-                message.setRoomId(roomId);
-                message.setFromUid(fromUserId);
-                message.setContent(content);
-                message.setType(messageType);
-                message.setStatus(MessageStatusEnum.NORMAL.getStatus());
-                if (serverMsgId != null) {
-                    message.setServerMsgId(serverMsgId);
-                }
-                // 手动设置时间，确保 room.setActiveTime 能获取到值
+            log.info("Stream 收到消息: tempId={}", tempId);
+
+            // 3. 数据库事务
+            ChatMessageEntity savedMessage = transactionTemplate.execute(status -> {
                 Date now = new Date();
-                message.setCreateTime(now);
-                message.setUpdateTime(now);
 
-                messageService.save(message);
+                ChatMessageEntity message = new ChatMessageEntity();
+                message.setSendId(sendId);
+                message.setReceiverId(targetId);
+                message.setReceiverType(receiverType);
+                message.setContent(content);
+                message.setMessageType(messageType);
+                message.setServerMsgId(serverMsgId);
+                message.setCreateDate(now);
 
-                // 2.2 更新发送者已读
-                userRoomRelateService.update(new LambdaUpdateWrapper<UserRoomRelate>()
-                        .eq(UserRoomRelate::getUserId, fromUserId)
-                        .eq(UserRoomRelate::getRoomId, roomId)
-                        .set(UserRoomRelate::getLatestReadMsgId, message.getId()));
+                chatMessageService.save(message);
 
-                // 2.3用户之前将会话隐藏，当收到消息时需更新会话为显示
-                userRoomRelateService.update(new LambdaUpdateWrapper<UserRoomRelate>()
-                        .eq(UserRoomRelate::getRoomId, roomId)
-                        .set(UserRoomRelate::getIsDeleted, 0)); // 全员复活
-
-                // 2.4 更新房间活跃时间
-                Room room = new Room();
-                room.setId(roomId);
-                room.setLastMsgId(message.getId());
-                room.setActiveTime(message.getCreateTime());
-                roomService.updateById(room);
+                updateSessions(message, sendId, targetId, receiverType, content, now);
 
                 return message;
             });
 
-            if (savedMessage == null)
-                return;
+            if (savedMessage == null) return;
 
-            // 3. 消息推送
-            pushMessage(savedMessage, tempId, type);
+            // 4. WebSocket 推送
+            pushMessage(savedMessage, tempId);
 
-            // 4. 手动 ACK：业务处理成功，确认消息，将消息从redisStream中弹出
-            redisTemplate.opsForStream().acknowledge(RedisStreamConfig.IM_STREAM_KEY, RedisStreamConfig.IM_GROUP,
-                    record.getId());
+            // 5. ACK
+            ackMessage(record);
 
         } catch (Exception e) {
-            log.error("消息消费处理异常: tempId={}", tempId, e);
-            // 5. 异常处理与 DLQ 机制
+            log.error("消息消费异常: tempId={}", tempId, e);
             handleException(record);
         }
     }
 
-    /**
-     * 异常处理：检查重试次数，超过限制移入死信队列
-     */
-    private void handleException(MapRecord<String, String, String> record) {
-        try {
-            // 查询当前消息在 Pending List 中的详情
-            PendingMessages pendingMessages = redisTemplate.opsForStream().pending(
-                    RedisStreamConfig.IM_STREAM_KEY,
-                    Consumer.from(RedisStreamConfig.IM_GROUP, RedisStreamConfig.IM_CONSUMER),
-                    Range.just(record.getId().getValue()),
-                    1L);
+    private void updateSessions(ChatMessageEntity message, Long sendId, Long targetId, int receiverType, String content, Date now) {
+        String lastMsgContent = (message.getMessageType() == MessageTypeEnum.TEXT.getCode()) ? content : "[非文本消息]";
 
-            if (pendingMessages.isEmpty()) {
-                return;
+        if (receiverType == ReceiverTypeEnum.USER.getCode()) {
+            updateSingleSession(sendId, targetId, receiverType, lastMsgContent, now, false);
+            updateSingleSession(targetId, sendId, receiverType, lastMsgContent, now, true);
+        } else if (receiverType == ReceiverTypeEnum.ROOM.getCode()) {
+            List<ChatUserRoomEntity> members = chatUserRoomService.list(new LambdaQueryWrapper<ChatUserRoomEntity>()
+                    .eq(ChatUserRoomEntity::getRoomId, targetId));
+            for (ChatUserRoomEntity member : members) {
+                boolean isSelf = member.getUserId().equals(sendId);
+                updateSingleSession(member.getUserId(), targetId, receiverType, lastMsgContent, now, !isSelf);
             }
-
-            PendingMessage pendingMessage = pendingMessages.get(0);
-            long deliveryCount = pendingMessage.getTotalDeliveryCount();
-
-            if (deliveryCount >= MAX_RETRY_COUNT) {
-                log.warn("消息重试次数({})超过上限，移入死信队列 DLQ: id={}", deliveryCount, record.getId());
-
-                // 1. 写入死信队列 (保留原消息体)
-                redisTemplate.opsForStream().add(DLQ_STREAM_KEY, record.getValue());
-
-                // 2. ACK 原队列消息 (将其移出 PEL，避免死循环)
-                redisTemplate.opsForStream().acknowledge(RedisStreamConfig.IM_STREAM_KEY, RedisStreamConfig.IM_GROUP,
-                        record.getId());
-            } else {
-                log.info("消息处理失败，等待重试 (当前次数: {})", deliveryCount);
-            }
-
-        } catch (Exception ex) {
-            log.error("DLQ 处理逻辑异常", ex);
         }
     }
 
-    /**
-     * 解析房间ID
-     */
-    private Long resolveRoomId(int type, Long fromUserId, Long targetId) {
-        if (type == RoomTypeEnum.GROUP.getType()) {
-            return targetId;
+    private void updateSingleSession(Long userId, Long targetId, int type, String content, Date time, boolean increaseUnread) {
+        ChatSessionEntity session = chatSessionService.getOne(new LambdaQueryWrapper<ChatSessionEntity>()
+                .eq(ChatSessionEntity::getUserId, userId)
+                .eq(ChatSessionEntity::getTargetId, targetId)
+                .eq(ChatSessionEntity::getType, type));
+
+        if (session == null) {
+            session = new ChatSessionEntity();
+            session.setUserId(userId);
+            session.setTargetId(targetId);
+            session.setType(type);
+            session.setName("会话" + targetId);
+            session.setUnreadCount(increaseUnread ? 1 : 0);
+            session.setLastMsgContent(content);
+            session.setLastMsgTime(time);
+            session.setIsDelete(0);
+            session.setIsPinned(0);
+            chatSessionService.save(session);
         } else {
-            long minUid = Math.min(fromUserId, targetId);
-            long maxUid = Math.max(fromUserId, targetId);
-            RoomFriend rf = roomFriendService.getOne(new LambdaQueryWrapper<RoomFriend>()
-                    .eq(RoomFriend::getUid1, minUid)
-                    .eq(RoomFriend::getUid2, maxUid)
-                    .select(RoomFriend::getRoomId));
-            return rf != null ? rf.getRoomId() : null;
+            LambdaUpdateWrapper<ChatSessionEntity> update = new LambdaUpdateWrapper<>();
+            update.eq(ChatSessionEntity::getId, session.getId())
+                    .set(ChatSessionEntity::getLastMsgContent, content)
+                    .set(ChatSessionEntity::getLastMsgTime, time)
+                    .set(ChatSessionEntity::getIsDelete, 0);
+            if (increaseUnread) {
+                update.setSql("unread_count = unread_count + 1");
+            }
+            chatSessionService.update(update);
         }
     }
 
     /**
      * 推送消息逻辑
      */
-    private void pushMessage(Message message, String tempId, int type) {
-        ChatMessageResp resp = wsAdapter.buildMessageResp(message, tempId);
-        WSBaseResp<ChatMessageResp> wsResp = new WSBaseResp<>();
-        wsResp.setType(WSReqTypeEnum.CHAT.getType());
-        wsResp.setData(resp);
+    private void pushMessage(ChatMessageEntity message, String tempId) {
+        // 使用 Adapter 构建带 tempId 的响应对象
+        WSBaseResp<ChatMessageResp> wsResp = wsAdapter.buildChatMessageResp(message, tempId);
 
-        // 这里消息已经通过事务保证安全落库，可以告诉前端消息保存完毕，并返回真实的 messageId 和创建时间
-        webSocketService.sendToUid(wsResp, message.getFromUid());
+        // 1. 发送给发送者 (为了回执，tempId 必须正确)
+        webSocketService.sendToUid(wsResp, message.getSendId());
 
-        if (type == RoomTypeEnum.PRIVATE.getType()) {
-            // 私聊
-            List<UserRoomRelate> members = userRoomRelateService.list(new LambdaQueryWrapper<UserRoomRelate>()
-                    .eq(UserRoomRelate::getRoomId, message.getRoomId())
-                    .ne(UserRoomRelate::getUserId, message.getFromUid()));
-            for (UserRoomRelate member : members) {
-                webSocketService.sendToUid(wsResp, member.getUserId());
-            }
+        // 2. 发送给其他接收人
+        if (Objects.equals(message.getReceiverType(), ReceiverTypeEnum.USER.getCode())) {
+            webSocketService.sendToUid(wsResp, message.getReceiverId());
         } else {
-            // 群聊
-            List<UserRoomRelate> list = userRoomRelateService.list(new LambdaQueryWrapper<UserRoomRelate>()
-                    .eq(UserRoomRelate::getRoomId, message.getRoomId()));
+            List<ChatUserRoomEntity> members = chatUserRoomService.list(new LambdaQueryWrapper<ChatUserRoomEntity>()
+                    .eq(ChatUserRoomEntity::getRoomId, message.getReceiverId()));
 
-            list.forEach(relate -> {
-                if (!relate.getUserId().equals(message.getFromUid())) {
-                    webSocketService.sendToUid(wsResp, relate.getUserId());
+            for (ChatUserRoomEntity member : members) {
+                if (!member.getUserId().equals(message.getSendId())) {
+                    webSocketService.sendToUid(wsResp, member.getUserId());
                 }
-            });
+            }
+        }
+    }
+
+    private void ackMessage(MapRecord<String, String, String> record) {
+        redisTemplate.opsForStream().acknowledge(
+                RedisStreamConfig.IM_STREAM_KEY,
+                RedisStreamConfig.IM_GROUP,
+                record.getId());
+    }
+
+    private void handleException(MapRecord<String, String, String> record) {
+        try {
+            PendingMessages pendingMessages = redisTemplate.opsForStream().pending(
+                    RedisStreamConfig.IM_STREAM_KEY,
+                    Consumer.from(RedisStreamConfig.IM_GROUP, RedisStreamConfig.IM_CONSUMER),
+                    Range.just(record.getId().getValue()),
+                    1L);
+
+            if (pendingMessages.isEmpty()) return;
+
+            PendingMessage pendingMessage = pendingMessages.get(0);
+            if (pendingMessage.getTotalDeliveryCount() >= MAX_RETRY_COUNT) {
+                log.warn("DLQ: id={}", record.getId());
+                redisTemplate.opsForStream().add(DLQ_STREAM_KEY, record.getValue());
+                ackMessage(record);
+            }
+        } catch (Exception ex) {
+            log.error("DLQ Error", ex);
         }
     }
 }
