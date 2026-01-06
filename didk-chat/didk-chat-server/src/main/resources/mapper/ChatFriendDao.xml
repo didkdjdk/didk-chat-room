@@ -8,70 +8,13 @@
         <result property="userId" column="user_id"/>
         <result property="friendId" column="friend_id"/>
         <result property="friendName" column="friend_name"/>
-        <result property="status" column="status"/>
+        <result property="friendImage" column="friend_image"/>
         <result property="alias" column="alias"/>
         <result property="createDate" column="create_date"/>
     </resultMap>
 
-    <select id="selectAllFriendsAndRoomsByUserId" resultType="com.didk.vo.ChatConversationListItemVO">
-        SELECT
-        *
-        FROM
-        (
-        /* Part 1: 好友私聊列表 */
-        SELECT
-        f.friend_id AS id,
-        'FRIEND' AS chat_type,
-        COALESCE(f.alias, u.username) AS name,
-        u.head_image AS avatar,
-        f.is_pinned AS is_pinned,
-        f.last_msg_time AS last_msg_time,
-        f.last_msg_content AS last_msg_content,
-        f.last_msg_type AS last_msg_type,
-
-        /* 直接获取持久化的未读数 */
-        f.unread_count AS unread_count
-
-        FROM chat_friend f
-        JOIN sys_user u ON f.friend_id = u.id
-        WHERE f.user_id = #{userId}
-        <if test="friendName != null and friendName.trim()!=''">
-            AND (u.username LIKE #{friendName}
-            OR f.alias LIKE #{friendName})
-        </if>
-
-        UNION ALL
-
-        /* Part 2: 群聊列表 */
-        SELECT
-        r.id AS id,
-        'ROOM' AS chat_type,
-        r.room_name AS name,
-        r.head_url AS avatar,
-        ur.is_pinned AS is_pinned,
-        ur.last_msg_time AS last_msg_time,
-        ur.last_msg_content AS last_msg_content,
-        ur.last_msg_type AS last_msg_type,
-        /* 逻辑：(群总消息数 - 我已读的消息序号)，如果结果小于0则为0 (防止数据异常) */
-        (IF((r.total_seq - ur.read_seq) > 0, (r.total_seq - ur.read_seq), 0)) AS unread_count
-        FROM chat_user_room ur
-        JOIN chat_room r ON ur.room_id = r.id
-        WHERE ur.user_id = #{userId}
-        <if test="friendName != null and friendName.trim()!=''">
-            AND (r.room_name LIKE #{friendName}
-            OR ur.alias LIKE #{friendName})
-        </if>
-        ) AS conversation_list
-
-        ORDER BY is_pinned DESC, last_msg_time DESC
-    </select>
-
     <select id="getById" resultType="com.didk.vo.ChatFriendVO" parameterType="java.lang.Long">
         select id,friend_id,friend_name,alias,create_date from chat_friend where id = #{id}
-    </select>
-
-    <select id="selectByUserAndFriend" resultType="com.didk.entity.ChatFriendEntity">
-        select * from chat_friend where user_id = #{userId} and friend_id = #{friendId}
     </select>
 
     <select id="getUserInfo" resultType="com.didk.vo.ChatUserVO">
@@ -79,10 +22,6 @@
             join chat_friend on chat_friend.friend_id = sys_user.id
         where chat_friend.user_id = #{userId} and chat_friend.friend_id = #{friendId}
     </select>
-
-    <update id="updateStatus">
-        update chat_friend set status = #{status} where user_id = #{userId} and friend_id = #{friendId}
-    </update>
 
     <delete id="deleteByUserIdAndFriendId">
         delete from chat_friend where user_id = #{userId} and friend_id = #{friendId}

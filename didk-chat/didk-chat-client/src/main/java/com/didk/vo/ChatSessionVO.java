@@ -46,6 +46,9 @@ public class ChatSessionVO implements Serializable {
     @Schema(description = "未读消息数")
     private Integer unreadCount;
 
+    @Schema(description = "是否删除（隐藏）：0否 1是")
+    private Integer isDelete;
+
     @Schema(description = "是否置顶：0否 1是")
     private Integer isPinned;
 

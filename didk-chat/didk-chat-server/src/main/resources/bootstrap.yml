@@ -1,7 +1,7 @@
 server:
   port: 8071
   servlet:
-    context-path: /caht
+    context-path: /chat
 spring:
   application:
     name: didk-chat-server

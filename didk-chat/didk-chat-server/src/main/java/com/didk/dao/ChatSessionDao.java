@@ -13,4 +13,6 @@ import java.util.Map;
 public interface ChatSessionDao extends BaseMapper<ChatSessionEntity> {
 
     List<ChatConversationListItemVO> selectConversationsByCursor(Map<String, Object> params);
+
+    void hideById(Long id);
 }

@@ -69,7 +69,7 @@ public class ChatMessageServiceImpl extends ServiceImpl<ChatMessageDao, ChatMess
             chatRoomService.incrementSeq(dto.getReceiverId());
         }
 
-        //更新发送方会话窗口的数据（添加或修改，异步）
+        //更新发送方会话窗口的数据（添加或修改）
 
         //更新接收方会话窗口的数据
 

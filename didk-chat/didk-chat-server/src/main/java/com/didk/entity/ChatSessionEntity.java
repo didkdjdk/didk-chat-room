@@ -1,7 +1,10 @@
 package com.didk.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -60,9 +63,14 @@ public class ChatSessionEntity implements Serializable {
     private Integer unreadCount;
 
     /**
+     * 是否删除（隐藏）：0否 1是
+     */
+    private Integer isDelete;
+
+    /**
      * 是否置顶：0否 1是
      */
-    private Integer isTop;
+    private Integer isPinned;
 
     /**
      * 状态：0正常 1隐藏/删除

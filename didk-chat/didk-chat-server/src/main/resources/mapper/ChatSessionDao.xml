@@ -22,6 +22,11 @@
             AND c.name LIKE CONCAT('%', #{sessionName}, '%')
         </if>
 
+        /* 正常主页检索会话时，被隐藏的会话不展示*/
+        <if test="sessionName == null or sessionName.trim() == ''">
+            AND c.is_delete = 0
+        </if>
+
         <if test="cursorTime != null and cursorPinned != null">
             /* 如果最后一条会话被置顶了，那么所有未被置顶的会话都需要查询，同时查询剩下的置顶的会话*/
             /* 如果最后一条会话未被置顶，则查询所有符合时间的未被置顶的会话*/
@@ -36,5 +41,10 @@
 
         LIMIT #{limit}
     </select>
+
+    <update id="hideById" parameterType="java.lang.Long">
+        UPDATE chat_session SET is_delete = 1 WHERE id = #{id}
+    </update>
+
 
 </mapper>

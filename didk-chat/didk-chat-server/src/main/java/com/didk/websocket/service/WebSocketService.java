@@ -1,5 +1,6 @@
 package com.didk.websocket.service;
 
+import com.didk.websocket.model.response.WSBaseResp;
 import jakarta.websocket.Session;
 
 public interface WebSocketService {
@@ -14,6 +15,8 @@ public interface WebSocketService {
      * (移除连接、更新状态、计算时长等)
      */
     void disconnect(Session session, Long userId);
+
+    void sendToUid(WSBaseResp<?> wsBaseResp, Long uid);
 
     /**
      * 处理聊天消息

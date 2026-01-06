@@ -1,28 +1,20 @@
 package com.didk.service.Impl;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.didk.commons.security.user.SecurityUser;
 import com.didk.commons.security.user.UserDetail;
-import com.didk.commons.tools.page.PageData;
 import com.didk.commons.tools.utils.ConvertUtils;
-import com.didk.commons.tools.utils.PageUtils;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dao.ChatFriendDao;
 import com.didk.dto.ChatFriendDTO;
 import com.didk.entity.ChatFriendEntity;
-import com.didk.enums.FriendStatusEnum;
 import com.didk.feign.UserFeignClient;
 import com.didk.service.ChatFriendService;
-import com.didk.vo.ChatConversationListItemVO;
 import com.didk.vo.ChatFriendVO;
 import com.didk.vo.ChatUserVO;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * 好友实现类
@@ -35,17 +27,6 @@ public class ChatFriendServiceImpl extends ServiceImpl<ChatFriendDao, ChatFriend
     private ChatFriendDao friendDao;
     @Resource
     private UserFeignClient userFeignClient;
-
-    /**
-     * 查询所有好友关系和群聊关系
-     */
-    @Override
-    public PageData<ChatConversationListItemVO> listAllFriendsAndRooms(Map<String, Object> params) {
-        PageUtils.paramsToLike(params,"friendName");
-        IPage<ChatConversationListItemVO> page = PageUtils.getPage(params, null, false);
-        List<ChatConversationListItemVO> list = friendDao.selectAllFriendsAndRoomsByUserId(params);
-        return PageUtils.getPageData(list, page.getTotal(), ChatConversationListItemVO.class);
-    }
 
     /**
      * 根据id查询好友关系
@@ -70,7 +51,6 @@ public class ChatFriendServiceImpl extends ServiceImpl<ChatFriendDao, ChatFriend
         ChatFriendEntity friendEntity = new ChatFriendEntity();
         friendEntity.setUserId(userId);
         friendEntity.setFriendId(friendId);
-        friendEntity.setStatus(FriendStatusEnum.NORMAL.getCode());
         UserDetail friendInfo = userFeignClient.getById(friendId).getData();
         friendEntity.setFriendName(friendInfo.getUsername());
 
@@ -96,15 +76,7 @@ public class ChatFriendServiceImpl extends ServiceImpl<ChatFriendDao, ChatFriend
         //从好友表中删除当前用户对好友的好友关系
         Long userId = SecurityUser.getUserId();
         friendDao.deleteByUserIdAndFriendId(userId,friendId);
-
-        //将好友表中好友对当前用户的好友关系的状态改为已删除
-        ChatFriendVO friendVO = friendDao.getById(friendId);
-        if (friendVO != null) {
-            ChatFriendDTO dto = new ChatFriendDTO();
-            dto.setId(friendVO.getId());
-            dto.setStatus(FriendStatusEnum.DELETED.getCode());
-            update(dto);
-        }
+        friendDao.deleteByUserIdAndFriendId(friendId,userId);
     }
 
 }

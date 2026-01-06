@@ -35,9 +35,9 @@ public class ChatFriendEntity implements Serializable {
     private String friendName;
 
     /**
-     * 状态：1正常 2已删除
+     * 好友头像
      */
-    private Integer status;
+    private String friendImage;
 
     /**
      * 好友备注名

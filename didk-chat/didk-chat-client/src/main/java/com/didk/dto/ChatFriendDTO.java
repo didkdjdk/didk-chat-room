@@ -27,8 +27,8 @@ public class ChatFriendDTO implements Serializable {
     @Schema(description = "好友名称")
     private String friendName;
 
-    @Schema(description = "状态：1正常 2已删除")
-    private Integer status;
+    @Schema(description = "好友头像")
+    private String friendImage;
 
     @Schema(description = "好友备注名")
     private String alias;

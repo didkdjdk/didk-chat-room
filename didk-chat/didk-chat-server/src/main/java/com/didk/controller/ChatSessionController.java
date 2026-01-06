@@ -1,6 +1,7 @@
 package com.didk.controller;
 
 import com.didk.commons.tools.utils.Result;
+import com.didk.dto.ChatSessionDTO;
 import com.didk.service.ChatSessionService;
 import com.didk.vo.ChatConversationListItemVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,6 +36,36 @@ public class ChatSessionController {
     public Result<List<ChatConversationListItemVO>> listConversations(@RequestParam Map<String,Object> params) {
         List<ChatConversationListItemVO> list = chatSessionService.listConversations(params);
         return new Result<List<ChatConversationListItemVO>>().ok(list);
+    }
+
+    // 创建会话列表
+    @PostMapping
+    @Operation(summary = "创建会话列表")
+    public Result<?> save(@RequestBody ChatSessionDTO dto) {
+        return chatSessionService.save(dto);
+    }
+
+    // 修改会话信息
+    @PutMapping
+    @Operation(summary = "修改会话信息")
+    public Result<?> update(@RequestBody ChatSessionDTO dto) {
+        return chatSessionService.update(dto);
+    }
+
+    // 隐藏会话
+    @PutMapping("hide/{sessionId}")
+    @Operation(summary = "隐藏会话")
+    public Result<?> hide(@PathVariable Long sessionId) {
+        chatSessionService.hide(sessionId);
+        return new Result<>();
+    }
+
+    // 删除会话
+    @DeleteMapping("{sessionId}")
+    @Operation(summary = "删除会话")
+    public Result<?> delete(@PathVariable Long sessionId) {
+        chatSessionService.delete(sessionId);
+        return new Result<>();
     }
 
 }

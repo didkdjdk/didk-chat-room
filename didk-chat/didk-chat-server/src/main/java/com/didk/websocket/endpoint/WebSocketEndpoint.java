@@ -1,25 +1,15 @@
 package com.didk.websocket.endpoint;
 
-import com.didk.commons.security.user.UserDetail;
+import cn.hutool.extra.spring.SpringUtil;
+import com.alibaba.fastjson.JSON;
 import com.didk.component.GetHttpSessionConfig;
+import com.didk.enums.WSReqTypeEnum;
+import com.didk.websocket.model.request.WSBaseReq;
+import com.didk.websocket.service.WebSocketService;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import com.alibaba.fastjson.JSON;
-import com.didk.commons.security.user.UserDetail;
-import com.didk.websocket.config.WebSocketAuthConfig; // 假设你创建了配置类
-import com.didk.websocket.model.WSBaseReq; // 假设这是你的基础请求对象
-import com.didk.websocket.service.WebSocketService;
-import jakarta.websocket.*;
-import jakarta.websocket.server.ServerEndpoint;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -28,15 +18,6 @@ import java.io.IOException;
 @ServerEndpoint(value = "/chat/{userName}", configurator = GetHttpSessionConfig.class)
 @Component
 public class WebSocketEndpoint {
-
-    // 1. 定义静态的 Service，用于处理业务
-    private static WebSocketService webSocketService;
-
-    // 2. 通过 Setter 方法注入 (Spring 启动时会调用)
-    @Autowired
-    public void setWebSocketService(WebSocketService webSocketService) {
-        WebSocketEndpoint.webSocketService = webSocketService;
-    }
 
     /**
      * 建立websocket连接后，被调用
@@ -62,7 +43,7 @@ public class WebSocketEndpoint {
         session.getUserProperties().put("currentUser", userId);
 
         // 4. 交给业务层处理 "上线" 逻辑
-        webSocketService.connect(session, userId);
+        getService().connect(session, userId);
     }
 
     /**
@@ -82,14 +63,15 @@ public class WebSocketEndpoint {
             if (baseReq == null || baseReq.getType() == null) {
                 return;
             }
+            WSReqTypeEnum wsReqTypeEnum = WSReqTypeEnum.of(baseReq.getType());
 
             // 3. 路由分发 (根据不同的 type 调用 Service 不同的方法)
-            switch (baseReq.getType()) {
-                case "CHAT": // 聊天消息
-                    webSocketService.handleChatMessage(session, baseReq.getData(), userId);
+            switch (wsReqTypeEnum) {
+                case CHAT: // 聊天消息
+                    getService().handleChatMessage(session, baseReq.getData(), userId);
                     break;
-                case "HEARTBEAT": // 心跳检测
-                    webSocketService.handleHeartbeat(session, userId);
+                case HEARTBEAT: // 心跳检测
+                    getService().handleHeartbeat(session, userId);
                     break;
                 default:
                     log.warn("未知的消息类型: {}", baseReq.getType());
@@ -98,7 +80,7 @@ public class WebSocketEndpoint {
         } catch (Exception e) {
             log.error("消息处理异常", e);
             // 可以选择给前端回一个错误包
-            // webSocketService.sendError(session, "消息格式错误");
+            // getService().sendError(session, "消息格式错误");
         }
     }
 
@@ -112,7 +94,7 @@ public class WebSocketEndpoint {
         Long userId = (Long) session.getUserProperties().get("currentUser");
         // 交给业务层处理 "下线" 逻辑
         if (userId != null) {
-            webSocketService.disconnect(session, userId);
+            getService().disconnect(session, userId);
         }
     }
 
@@ -122,5 +104,9 @@ public class WebSocketEndpoint {
         log.error("WebSocket 连接错误: sessionId={}", session.getId(), t);
     }
 
+    //获取WebSocketService
+    private WebSocketService getService() {
+        return SpringUtil.getBean(WebSocketService.class);
+    }
 
 }

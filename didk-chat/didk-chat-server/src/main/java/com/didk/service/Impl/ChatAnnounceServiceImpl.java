@@ -81,6 +81,7 @@ public class ChatAnnounceServiceImpl extends ServiceImpl<ChatAnnounceDao, ChatAn
         chatMessageDTO.setMessageType(MessageTypeEnum.ANNOUNCEMENT.getCode());
         chatMessageDTO.setContent(announceEntity.getContent());
         chatMessageDTO.setAnnounceId(announceEntity.getId());
+        //TODO
         messageService.save(chatMessageDTO);
 
         return new Result<>().ok(null);

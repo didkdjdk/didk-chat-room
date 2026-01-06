@@ -1,0 +1,32 @@
+package com.didk.enums;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Getter
+@AllArgsConstructor
+public enum WSReqTypeEnum {
+    CHAT(2, "聊天消息"),
+    HEARTBEAT(4, "心跳"),
+    ERROR(5, "错误通知"),
+    ACK(6, "消息确认");
+
+    private final Integer type;
+    private final String desc;
+
+    private static final Map<Integer, WSReqTypeEnum> cache;
+
+    static {
+        cache = Arrays.stream(WSReqTypeEnum.values())
+                .collect(Collectors.toMap(WSReqTypeEnum::getType, Function.identity()));
+    }
+
+    public static WSReqTypeEnum of(Integer type) {
+        return cache.get(type);
+    }
+}

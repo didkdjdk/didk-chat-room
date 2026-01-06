@@ -5,12 +5,13 @@ import com.didk.commons.security.user.SecurityUser;
 import com.didk.commons.tools.utils.ConvertUtils;
 import com.didk.commons.tools.utils.Result;
 import com.didk.dao.ChatFriendRequestDao;
-import com.didk.dto.ChatFriendDTO;
 import com.didk.dto.ChatFriendRequestDTO;
+import com.didk.dto.ChatMessageDTO;
 import com.didk.entity.ChatFriendRequestEntity;
 import com.didk.enums.FriendRequestStatusEnum;
 import com.didk.service.ChatFriendRequestService;
 import com.didk.service.ChatFriendService;
+import com.didk.service.ChatMessageService;
 import com.didk.vo.ChatFriendRequestVO;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,8 @@ public class ChatFriendRequestServiceImpl extends ServiceImpl<ChatFriendRequestD
     private ChatFriendRequestDao friendRequestDao;
     @Resource
     private ChatFriendService friendService;
+    @Resource
+    private ChatMessageService chatMessageService;
 
     /**
      * 游标查询当前用户的好友请求列表(查询发送方或接收方是自己的好友请求)
@@ -88,7 +91,12 @@ public class ChatFriendRequestServiceImpl extends ServiceImpl<ChatFriendRequestD
             friendService.save(toUserId,fromUserId);
         }
 
-        //通过Websocket向前端发送消息TODO
+        //将验证消息作为一条消息发送给对方
+        ChatMessageDTO chatMessageDTO = new ChatMessageDTO();
+
+        //TODO
+        chatMessageService.save(chatMessageDTO);
+
 
         return new Result<>().ok(null);
     }

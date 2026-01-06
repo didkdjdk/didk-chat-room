@@ -1,4 +1,4 @@
-package com.didk.websocket.model;
+package com.didk.websocket.model.request;
 
 import lombok.Data;
 

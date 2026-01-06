@@ -27,6 +27,9 @@ public class ChatFriendVO implements Serializable {
     @Schema(description = "好友名称")
     private String friendName;
 
+    @Schema(description = "好友头像")
+    private String friendImage;
+
     @Schema(description = "好友备注名")
     private String alias;
 
