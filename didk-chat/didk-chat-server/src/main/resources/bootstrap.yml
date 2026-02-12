@@ -1,5 +1,6 @@
 server:
-  port: 8071
+#  port: 8088
+  port: 8089
   servlet:
     context-path: /chat
 spring:
@@ -43,4 +44,4 @@ logging:
   level:
     org:
       springframework:
-        security=DEBUG:
+        security: DEBUG
