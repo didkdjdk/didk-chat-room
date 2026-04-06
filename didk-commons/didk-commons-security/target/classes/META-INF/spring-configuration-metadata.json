@@ -11,13 +11,15 @@
       "name": "didk.security.access-token-expire",
       "type": "java.lang.Integer",
       "description": "accessToken 过期时间(单位：秒)，默认12小时",
-      "sourceType": "com.didk.commons.security.properties.SecurityProperties"
+      "sourceType": "com.didk.commons.security.properties.SecurityProperties",
+      "defaultValue": 0
     },
     {
       "name": "didk.security.refresh-token-expire",
       "type": "java.lang.Integer",
       "description": "refreshToken 过期时间(单位：秒)，默认14天",
-      "sourceType": "com.didk.commons.security.properties.SecurityProperties"
+      "sourceType": "com.didk.commons.security.properties.SecurityProperties",
+      "defaultValue": 0
     }
   ],
   "hints": []
