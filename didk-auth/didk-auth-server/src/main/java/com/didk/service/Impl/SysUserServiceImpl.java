@@ -94,6 +94,8 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserDao, SysUserEntit
         //密码加密
         String password = passwordEncoder.encode(entity.getPassword());
         entity.setPassword(password);
+        entity.setStatus(1);
+        entity.setSuperAdmin(0);
 
         //保存用户
         entity.setSuperAdmin(SuperAdminEnum.NO.value());
